@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Phaser 3 Tank Game - Boss Battle</title>
+    <title>รถถังโชกุน</title>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.60.0/phaser.min.js"></script>
     <style>
@@ -12,6 +12,9 @@
 </head>
 <body>
 <script>
+// ==========================================
+// ฉากเตรียมทรัพยากร
+// ==========================================
 class BootScene extends Phaser.Scene {
     constructor() { super('Boot'); }
 
@@ -25,94 +28,73 @@ class BootScene extends Phaser.Scene {
         this.registry.set('totalScore', 0);
         let g = this.add.graphics();
 
-        // รถถังผู้เล่น
-        g.clear();
-        g.fillStyle(0x111111); g.fillRect(5, 2, 40, 10); g.fillRect(5, 28, 40, 10);
-        g.lineStyle(1, 0x333333);
-        for(let i = 8; i < 45; i+=4) { g.beginPath(); g.moveTo(i, 2); g.lineTo(i, 12); g.stroke(); g.beginPath(); g.moveTo(i, 28); g.lineTo(i, 38); g.stroke(); }
-        g.fillStyle(0x2d5a27); g.fillRoundedRect(10, 8, 36, 24, 4);
-        g.fillStyle(0x1e3d1a); g.fillCircle(18, 14, 5); g.fillCircle(38, 26, 6); g.fillCircle(20, 28, 4);
-        g.fillStyle(0x3a7533); g.fillCircle(35, 12, 4); g.fillCircle(28, 25, 3);
-        g.fillStyle(0x1e3d1a); g.fillCircle(26, 22, 13);
-        g.fillStyle(0x2d5a27); g.fillCircle(28, 20, 12);
-        g.fillStyle(0x111111); g.fillCircle(24, 16, 4); g.fillStyle(0x3a7533); g.fillCircle(24, 16, 3);
-        g.fillStyle(0x111111); g.fillRect(28, 17, 30, 6); g.fillStyle(0x222222); g.fillRect(38, 18, 20, 4); g.fillStyle(0x111111); g.fillRect(54, 16, 6, 8); 
-        g.generateTexture('tank_player', 64, 40);
-
-        // รถถังศัตรู
-        g.clear();
-        g.fillStyle(0x111111); g.fillRect(5, 2, 40, 10); g.fillRect(5, 28, 40, 10);
-        g.lineStyle(1, 0x333333);
-        for(let i = 8; i < 45; i+=4) { g.beginPath(); g.moveTo(i, 2); g.lineTo(i, 12); g.stroke(); g.beginPath(); g.moveTo(i, 28); g.lineTo(i, 38); g.stroke(); }
-        g.fillStyle(0x8a2525); g.fillRoundedRect(10, 8, 36, 24, 4);
-        g.fillStyle(0x5e1515); g.fillCircle(18, 14, 5); g.fillCircle(38, 26, 6); g.fillCircle(20, 28, 4);
-        g.fillStyle(0xaa3535); g.fillCircle(35, 12, 4); g.fillCircle(28, 25, 3);
-        g.fillStyle(0x5e1515); g.fillCircle(26, 22, 13); g.fillStyle(0x8a2525); g.fillCircle(28, 20, 12);
-        g.fillStyle(0x111111); g.fillCircle(24, 16, 4); g.fillStyle(0xaa3535); g.fillCircle(24, 16, 3);
-        g.fillStyle(0x111111); g.fillRect(28, 17, 30, 6); g.fillStyle(0x331111); g.fillRect(38, 18, 20, 4); g.fillStyle(0x111111); g.fillRect(54, 16, 6, 8); 
-        g.generateTexture('tank_enemy', 64, 40);
-
-        // บอสรถถัง (สีม่วงดำ คันใหญ่)
-        g.clear();
-        g.fillStyle(0x111111); g.fillRect(5, 2, 60, 14); g.fillRect(5, 44, 60, 14);
-        g.lineStyle(1, 0x333333);
-        for(let i = 10; i < 65; i+=5) { g.beginPath(); g.moveTo(i, 2); g.lineTo(i, 16); g.stroke(); g.beginPath(); g.moveTo(i, 44); g.lineTo(i, 58); g.stroke(); }
-        g.fillStyle(0x311b5e); g.fillRoundedRect(15, 12, 50, 36, 6);
-        g.fillStyle(0x1b0e36); g.fillCircle(25, 20, 8); g.fillCircle(55, 38, 8);
-        g.fillStyle(0x221144); g.fillCircle(40, 30, 18);
-        g.fillStyle(0x111111); g.fillCircle(36, 24, 6);
-        g.fillStyle(0x111111); g.fillRect(40, 26, 45, 8); 
-        g.fillStyle(0x222222); g.fillRect(65, 25, 10, 10);
-        g.generateTexture('tank_boss', 90, 60);
-
-        // กำแพงปูน
-        g.clear();
-        g.fillStyle(0x4a4a4a); g.fillRect(0, 0, 50, 50);
-        g.lineStyle(2, 0x222222); g.strokeRect(0, 0, 50, 50); g.strokeRect(25, 0, 25, 25); g.strokeRect(0, 25, 25, 25);
-        g.generateTexture('wall_normal', 50, 50);
-
-        // ไอเทมหัวใจ (HP)
-        g.clear();
-        g.fillStyle(0xff2222);
-        g.fillCircle(10, 10, 6); g.fillCircle(20, 10, 6);
-        g.fillTriangle(4, 12, 26, 12, 15, 25);
-        g.generateTexture('heart', 30, 30);
-
-        // ต้นไม้ป่า
-        g.clear();
-        g.fillStyle(0x1a4314); g.fillCircle(25, 25, 22);
-        g.fillStyle(0x28681e); g.fillCircle(25, 25, 16);
-        g.fillStyle(0x3a8c2d); g.fillCircle(20, 20, 8);
-        g.generateTexture('tree', 50, 50);
-
-        // กระบองเพชร (ทะเลทราย)
-        g.clear();
-        g.fillStyle(0x28681e); g.fillRoundedRect(15, 5, 20, 40, 10);
-        g.fillRoundedRect(5, 15, 15, 10, 5); g.fillRoundedRect(30, 20, 15, 10, 5);
-        g.generateTexture('cactus', 50, 50);
-
-        // ตุ๊กตาหิมะ (ฤดูหนาว)
-        g.clear();
-        g.fillStyle(0xeeeeee); g.fillCircle(25, 35, 15); g.fillCircle(25, 15, 10);
-        g.fillStyle(0xffaa00); g.fillTriangle(25, 15, 35, 17, 25, 19);
-        g.fillStyle(0x111111); g.fillCircle(21, 13, 2); g.fillCircle(25, 13, 2);
-        g.generateTexture('snowman', 50, 50);
-
-        // กล่องพยาบาล
-        g.clear();
-        g.fillStyle(0xdddddd); g.fillRoundedRect(0, 0, 26, 26, 4);
-        g.fillStyle(0xcc0000); g.fillRect(10, 4, 6, 18); g.fillRect(4, 10, 18, 6);
-        g.generateTexture('medkit', 26, 26);
-
-        // กระสุนและระเบิด
+        g.clear(); g.fillStyle(0x111111); g.fillRect(5, 2, 40, 10); g.fillRect(5, 28, 40, 10); g.lineStyle(1, 0x333333); for(let i = 8; i < 45; i+=4) { g.beginPath(); g.moveTo(i, 2); g.lineTo(i, 12); g.stroke(); g.beginPath(); g.moveTo(i, 28); g.lineTo(i, 38); g.stroke(); } g.fillStyle(0x2d5a27); g.fillRoundedRect(10, 8, 36, 24, 4); g.fillStyle(0x1e3d1a); g.fillCircle(18, 14, 5); g.fillCircle(38, 26, 6); g.fillCircle(20, 28, 4); g.fillStyle(0x3a7533); g.fillCircle(35, 12, 4); g.fillCircle(28, 25, 3); g.fillStyle(0x1e3d1a); g.fillCircle(26, 22, 13); g.fillStyle(0x2d5a27); g.fillCircle(28, 20, 12); g.fillStyle(0x111111); g.fillCircle(24, 16, 4); g.fillStyle(0x3a7533); g.fillCircle(24, 16, 3); g.fillStyle(0x111111); g.fillRect(28, 17, 30, 6); g.fillStyle(0x222222); g.fillRect(38, 18, 20, 4); g.fillStyle(0x111111); g.fillRect(54, 16, 6, 8); g.generateTexture('tank_player', 64, 40);
+        g.clear(); g.fillStyle(0x111111); g.fillRect(5, 2, 40, 10); g.fillRect(5, 28, 40, 10); g.lineStyle(1, 0x333333); for(let i = 8; i < 45; i+=4) { g.beginPath(); g.moveTo(i, 2); g.lineTo(i, 12); g.stroke(); g.beginPath(); g.moveTo(i, 28); g.lineTo(i, 38); g.stroke(); } g.fillStyle(0x8a2525); g.fillRoundedRect(10, 8, 36, 24, 4); g.fillStyle(0x5e1515); g.fillCircle(18, 14, 5); g.fillCircle(38, 26, 6); g.fillCircle(20, 28, 4); g.fillStyle(0xaa3535); g.fillCircle(35, 12, 4); g.fillCircle(28, 25, 3); g.fillStyle(0x5e1515); g.fillCircle(26, 22, 13); g.fillStyle(0x8a2525); g.fillCircle(28, 20, 12); g.fillStyle(0x111111); g.fillCircle(24, 16, 4); g.fillStyle(0xaa3535); g.fillCircle(24, 16, 3); g.fillStyle(0x111111); g.fillRect(28, 17, 30, 6); g.fillStyle(0x331111); g.fillRect(38, 18, 20, 4); g.fillStyle(0x111111); g.fillRect(54, 16, 6, 8); g.generateTexture('tank_enemy', 64, 40);
+        g.clear(); g.fillStyle(0x111111); g.fillRect(5, 2, 60, 14); g.fillRect(5, 44, 60, 14); g.lineStyle(1, 0x333333); for(let i = 10; i < 65; i+=5) { g.beginPath(); g.moveTo(i, 2); g.lineTo(i, 16); g.stroke(); g.beginPath(); g.moveTo(i, 44); g.lineTo(i, 58); g.stroke(); } g.fillStyle(0x311b5e); g.fillRoundedRect(15, 12, 50, 36, 6); g.fillStyle(0x1b0e36); g.fillCircle(25, 20, 8); g.fillCircle(55, 38, 8); g.fillStyle(0x221144); g.fillCircle(40, 30, 18); g.fillStyle(0x111111); g.fillCircle(36, 24, 6); g.fillStyle(0x111111); g.fillRect(40, 26, 45, 8); g.fillStyle(0x222222); g.fillRect(65, 25, 10, 10); g.generateTexture('tank_boss', 90, 60);
+        g.clear(); g.fillStyle(0x4a4a4a); g.fillRect(0, 0, 50, 50); g.lineStyle(2, 0x222222); g.strokeRect(0, 0, 50, 50); g.strokeRect(25, 0, 25, 25); g.strokeRect(0, 25, 25, 25); g.generateTexture('wall_normal', 50, 50);
+        g.clear(); g.fillStyle(0xff2222); g.fillCircle(10, 10, 6); g.fillCircle(20, 10, 6); g.fillTriangle(4, 12, 26, 12, 15, 25); g.generateTexture('heart', 30, 30);
+        g.clear(); g.fillStyle(0x1a4314); g.fillCircle(25, 25, 22); g.fillStyle(0x28681e); g.fillCircle(25, 25, 16); g.fillStyle(0x3a8c2d); g.fillCircle(20, 20, 8); g.generateTexture('tree', 50, 50);
+        g.clear(); g.fillStyle(0x28681e); g.fillRoundedRect(15, 5, 20, 40, 10); g.fillRoundedRect(5, 15, 15, 10, 5); g.fillRoundedRect(30, 20, 15, 10, 5); g.generateTexture('cactus', 50, 50);
+        g.clear(); g.fillStyle(0xeeeeee); g.fillCircle(25, 35, 15); g.fillCircle(25, 15, 10); g.fillStyle(0xffaa00); g.fillTriangle(25, 15, 35, 17, 25, 19); g.fillStyle(0x111111); g.fillCircle(21, 13, 2); g.fillCircle(25, 13, 2); g.generateTexture('snowman', 50, 50);
+        g.clear(); g.fillStyle(0xdddddd); g.fillRoundedRect(0, 0, 26, 26, 4); g.fillStyle(0xcc0000); g.fillRect(10, 4, 6, 18); g.fillRect(4, 10, 18, 6); g.generateTexture('medkit', 26, 26);
         g.clear(); g.fillStyle(0xffff00); g.fillRoundedRect(0, 0, 14, 6, 3); g.fillStyle(0xffffff); g.fillRoundedRect(2, 1, 8, 4, 2); g.generateTexture('bullet', 14, 6);
         g.clear(); g.fillStyle(0xff5500); g.fillRoundedRect(0, 0, 14, 6, 3); g.fillStyle(0xffffff); g.fillRoundedRect(2, 1, 8, 4, 2); g.generateTexture('enemy_bullet', 14, 6);
         g.clear(); g.fillStyle(0xffaa00); g.fillRect(0, 0, 6, 6); g.generateTexture('particle', 6, 6);
         
-        this.scene.start('Level1');
+        this.scene.start('MainMenu');
     }
 }
 
+// ==========================================
+// หน้าจอเริ่มเกม (Main Menu)
+// ==========================================
+class MainMenu extends Phaser.Scene {
+    constructor() { super('MainMenu'); }
+
+    create() {
+        this.add.grid(400, 300, 800, 600, 50, 50, 0x1a1a1a, 1, 0x333333, 0.5);
+
+        this.add.text(400, 200, 'รถถังโชกุน', { 
+            fontFamily: '"Kanit", sans-serif', 
+            fontSize: '85px', 
+            fill: '#00ff00', 
+            stroke: '#000', 
+            strokeThickness: 8 
+        }).setOrigin(0.5);
+
+        this.add.text(400, 300, 'ศึกทะลวงด่านประจัญบาน', { 
+            fontFamily: '"Kanit", sans-serif', 
+            fontSize: '32px', 
+            fill: '#fff', 
+            stroke: '#000', 
+            strokeThickness: 4 
+        }).setOrigin(0.5);
+
+        let startBtn = this.add.text(400, 450, '- คลิกหน้าจอเพื่อเริ่มเกม -', { 
+            fontFamily: '"Kanit", sans-serif', 
+            fontSize: '28px', 
+            fill: '#ffff00', 
+            stroke: '#000', 
+            strokeThickness: 4 
+        }).setOrigin(0.5);
+
+        this.tweens.add({
+            targets: startBtn,
+            alpha: 0.1,
+            yoyo: true,
+            repeat: -1,
+            duration: 800
+        });
+
+        this.input.once('pointerdown', () => {
+            this.scene.start('Level1');
+        });
+    }
+}
+
+// ==========================================
+// คลาสหลักสำหรับสร้างด่าน
+// ==========================================
 class BaseLevel extends Phaser.Scene {
     constructor(key) { super(key); }
 
@@ -199,8 +181,7 @@ class BaseLevel extends Phaser.Scene {
                     let boss = this.enemies.create(x, y, 'tank_boss');
                     boss.setCollideWorldBounds(true); boss.setBounce(1);
                     boss.setVelocity(Phaser.Math.Between(-80, 80), Phaser.Math.Between(-80, 80));
-                    boss.setData('isBoss', true);
-                    boss.setData('hp', 10); // ตั้งค่าเลือดบอสให้เป็น 10
+                    boss.setData('isBoss', true); boss.setData('hp', 10);
                 }
                 else if (char === 'H') this.items.create(x, y, 'medkit');
             }
@@ -240,7 +221,7 @@ class BaseLevel extends Phaser.Scene {
         if (this.isGameOver || !this.player.active) return;
         let bullet = this.bullets.get(this.player.x, this.player.y, 'bullet');
         if (bullet) {
-            this.sound.play('shoot', { volume: 0.3 });
+            try { this.sound.play('shoot', { volume: 0.3 }); } catch(e){}
             bullet.setActive(true).setVisible(true); bullet.enableBody(true, this.player.x, this.player.y, true, true);
             let angle = Phaser.Math.Angle.Between(this.player.x, this.player.y, pointer.x, pointer.y);
             bullet.setRotation(angle); bullet.x += Math.cos(angle) * 35; bullet.y += Math.sin(angle) * 35;
@@ -256,7 +237,7 @@ class BaseLevel extends Phaser.Scene {
                 if(distance < 500) { 
                     let bullet = this.enemyBullets.get(enemy.x, enemy.y, 'enemy_bullet');
                     if (bullet) {
-                        this.sound.play('shoot', { volume: 0.1 });
+                        try { this.sound.play('shoot', { volume: 0.1 }); } catch(e){}
                         bullet.setActive(true).setVisible(true); bullet.enableBody(true, enemy.x, enemy.y, true, true);
                         let angle = Phaser.Math.Angle.Between(enemy.x, enemy.y, this.player.x, this.player.y);
                         bullet.setRotation(angle); bullet.x += Math.cos(angle) * 35; bullet.y += Math.sin(angle) * 35;
@@ -283,22 +264,20 @@ class BaseLevel extends Phaser.Scene {
         bullet.disableBody(true, true);
 
         let isBoss = enemy.getData('isBoss');
-        
         if (isBoss) {
             let hp = enemy.getData('hp') - 1;
             enemy.setData('hp', hp);
-            
             enemy.setTint(0xffffff);
             this.time.delayedCall(100, () => { enemy.clearTint(); });
             
             if (hp > 0) {
-                this.sound.play('explode', { volume: 0.2 });
+                try { this.sound.play('explode', { volume: 0.2 }); } catch(e){}
                 this.createExplosion(bullet.x, bullet.y, 0xffaa00, 1);
                 return; 
             }
         }
 
-        this.sound.play('explode', { volume: 0.6 });
+        try { this.sound.play('explode', { volume: 0.6 }); } catch(e){}
         this.createExplosion(enemy.x, enemy.y, isBoss ? 0xcc00ff : 0xff3300, isBoss ? 3 : 1.5);
         enemy.disableBody(true, true);
         
@@ -310,7 +289,7 @@ class BaseLevel extends Phaser.Scene {
     }
 
     hitPlayer(player, bullet) {
-        this.sound.play('explode', { volume: 0.5 });
+        try { this.sound.play('explode', { volume: 0.5 }); } catch(e){}
         this.createExplosion(player.x, player.y, 0xffaa00);
         bullet.disableBody(true, true);
         
@@ -328,8 +307,8 @@ class BaseLevel extends Phaser.Scene {
     }
 
     collectItem(player, item) {
-        this.sound.play('pickup', { volume: 0.6 });
-        item.disableBody(true, true);
+        try { this.sound.play('pickup', { volume: 0.6 }); } catch(e){}
+        item.destroy(); 
         if(this.playerHP < 5) this.playerHP++;
         this.updateUI();
         this.createExplosion(item.x, item.y, 0x00ff00);
@@ -351,12 +330,18 @@ class BaseLevel extends Phaser.Scene {
             }
         } else {
             textStyle.fill = '#f00';
-            this.registry.set('totalScore', 0);
-            this.add.text(400, 300, 'จบเกม\nคลิกเพื่อเริ่มใหม่', textStyle).setOrigin(0.5);
+            this.add.text(400, 300, 'จบเกม\nคลิกเพื่อกลับไปเมนูหลัก', textStyle).setOrigin(0.5);
+            this.input.once('pointerdown', () => { 
+                this.registry.set('totalScore', 0);
+                this.scene.start('MainMenu'); 
+            });
         }
     }
 }
 
+// ==========================================
+// แผนที่ด่านต่างๆ
+// ==========================================
 class Level1 extends BaseLevel {
     constructor() { super('Level1'); }
     create() {
@@ -418,14 +403,15 @@ class Level3 extends BaseLevel {
             'W...E......E...W',
             'WWWWWWWWWWWWWWWW'
         ];
-        // ตัว E 5 ตัว + ตัว B 1 ตัว รวมเป็น 6 ตัว
         this.initData(3, 'winter', map, 6, 160, 900, null);
         super.create();
     }
-}const config = {
+}
+
+const config = {
     type: Phaser.AUTO, width: 800, height: 600,
     physics: { default: 'arcade', arcade: { debug: false } },
-    scene: [BootScene, Level1, Level2, Level3]
+    scene: [BootScene, MainMenu, Level1, Level2, Level3]
 };
 const game = new Phaser.Game(config);
 </script>
