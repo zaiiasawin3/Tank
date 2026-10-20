@@ -12,9 +12,6 @@
 </head>
 <body>
 <script>
-// ==========================================
-// ฉากเตรียมทรัพยากร
-// ==========================================
 class BootScene extends Phaser.Scene {
     constructor() { super('Boot'); }
 
@@ -45,9 +42,6 @@ class BootScene extends Phaser.Scene {
     }
 }
 
-// ==========================================
-// หน้าจอเริ่มเกม (Main Menu)
-// ==========================================
 class MainMenu extends Phaser.Scene {
     constructor() { super('MainMenu'); }
 
@@ -92,9 +86,6 @@ class MainMenu extends Phaser.Scene {
     }
 }
 
-// ==========================================
-// คลาสหลักสำหรับสร้างด่าน
-// ==========================================
 class BaseLevel extends Phaser.Scene {
     constructor(key) { super(key); }
 
@@ -132,7 +123,7 @@ class BaseLevel extends Phaser.Scene {
 
         this.buildMap();
 
-        this.uiText = this.add.text(20, 15, '', { fontFamily: '"Kanit", sans-serif', fontSize: '24px', fill: '#fff', stroke: '#000', strokeThickness: 5 });
+        this.uiText = this.add.text(20, 15, '', { fontFamily: '"Kanit", sans-serif', fontSize: '22px', fill: '#fff', stroke: '#000', strokeThickness: 5 });
         this.uiText.setDepth(20);
         this.updateUI();
 
@@ -205,13 +196,14 @@ class BaseLevel extends Phaser.Scene {
         let totalScore = this.registry.get('totalScore');
         let themeName = this.theme === 'forest' ? 'ป่าไม้' : (this.theme === 'desert' ? 'ทะเลทราย' : 'ฤดูหนาว');
         
-        this.uiText.setText(`ด่าน ${this.levelNum} (${themeName})    คะแนนรวม ${totalScore}    พลังชีวิต `);
+        // เพิ่มชื่อเกม รถถังโชกุน นำหน้าไว้ตรงนี้
+        this.uiText.setText(`รถถังโชกุน | ด่าน ${this.levelNum} (${themeName}) | คะแนนรวม ${totalScore} | พลังชีวิต `);
         
         this.heartIcons.forEach(h => h.destroy());
         this.heartIcons = [];
-        let startX = this.uiText.x + this.uiText.width + 15;
+        let startX = this.uiText.x + this.uiText.width + 10;
         for(let i=0; i<this.playerHP; i++) {
-            let heart = this.add.image(startX + (i * 35), 32, 'heart');
+            let heart = this.add.image(startX + (i * 30), 28, 'heart');
             heart.setDepth(20);
             this.heartIcons.push(heart);
         }
@@ -339,9 +331,6 @@ class BaseLevel extends Phaser.Scene {
     }
 }
 
-// ==========================================
-// แผนที่ด่านต่างๆ
-// ==========================================
 class Level1 extends BaseLevel {
     constructor() { super('Level1'); }
     create() {
