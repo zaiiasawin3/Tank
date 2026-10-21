@@ -55,22 +55,22 @@ class BootScene extends Phaser.Scene {
         
         let g = this.add.graphics();
         
-        // --- วาดรถถังผู้เล่น (รายละเอียดสูง) ---
+        // รถถังผู้เล่น
         g.clear();
-        g.fillStyle(0x000000, 0.4); g.fillRoundedRect(8, 5, 48, 40, 5); // เงา
-        g.fillStyle(0x1a1a1a); g.fillRoundedRect(5, 2, 40, 12, 3); g.fillRoundedRect(5, 26, 40, 12, 3); // สายพานพื้น
-        g.lineStyle(2, 0x0a0a0a); for(let i=8; i<45; i+=5){ g.lineBetween(i,2,i,14); g.lineBetween(i,26,i,38); } // รอยสายพาน
-        g.fillStyle(0x1b4016); g.fillRoundedRect(12, 6, 34, 28, 4); // เกราะฐาน
-        g.fillStyle(0x2e6126); g.fillRoundedRect(14, 8, 30, 24, 3); // เกราะสว่าง
-        g.lineStyle(1, 0x1b4016); g.strokeRoundedRect(16, 10, 26, 20, 2); // ลวดลาย
-        g.fillStyle(0x1b4016); g.fillCircle(24, 20, 14); // ฐานปืน
-        g.fillStyle(0x3e7a35); g.fillCircle(24, 20, 12); // ป้อมปืน
-        g.fillStyle(0x111111); g.fillRect(24, 17, 36, 6); // กระบอกปืน
-        g.fillStyle(0x555555); g.fillRect(28, 18, 30, 2); // แสงสะท้อนกระบอกปืน
-        g.fillStyle(0x222222); g.fillRoundedRect(56, 14, 10, 12, 2); // ปากกระบอก
+        g.fillStyle(0x000000, 0.4); g.fillRoundedRect(8, 5, 48, 40, 5);
+        g.fillStyle(0x1a1a1a); g.fillRoundedRect(5, 2, 40, 12, 3); g.fillRoundedRect(5, 26, 40, 12, 3);
+        g.lineStyle(2, 0x0a0a0a); for(let i=8; i<45; i+=5){ g.lineBetween(i,2,i,14); g.lineBetween(i,26,i,38); }
+        g.fillStyle(0x1b4016); g.fillRoundedRect(12, 6, 34, 28, 4);
+        g.fillStyle(0x2e6126); g.fillRoundedRect(14, 8, 30, 24, 3);
+        g.lineStyle(1, 0x1b4016); g.strokeRoundedRect(16, 10, 26, 20, 2);
+        g.fillStyle(0x1b4016); g.fillCircle(24, 20, 14);
+        g.fillStyle(0x3e7a35); g.fillCircle(24, 20, 12);
+        g.fillStyle(0x111111); g.fillRect(24, 17, 36, 6);
+        g.fillStyle(0x555555); g.fillRect(28, 18, 30, 2);
+        g.fillStyle(0x222222); g.fillRoundedRect(56, 14, 10, 12, 2);
         g.generateTexture('tank_player', 70, 44);
 
-        // --- วาดรถถังศัตรู ---
+        // รถถังศัตรู
         g.clear();
         g.fillStyle(0x000000, 0.4); g.fillRoundedRect(8, 5, 48, 40, 5); 
         g.fillStyle(0x1a1a1a); g.fillRoundedRect(5, 2, 40, 12, 3); g.fillRoundedRect(5, 26, 40, 12, 3);
@@ -84,7 +84,7 @@ class BootScene extends Phaser.Scene {
         g.fillStyle(0x222222); g.fillRoundedRect(56, 14, 10, 12, 2);
         g.generateTexture('tank_enemy', 70, 44);
 
-        // --- วาดรถถังบอส ---
+        // รถถังบอส
         g.clear();
         g.fillStyle(0x000000, 0.5); g.fillRoundedRect(10, 5, 75, 50, 6);
         g.fillStyle(0x1a1a1a); g.fillRoundedRect(5, 2, 60, 16, 4); g.fillRoundedRect(5, 42, 60, 16, 4);
@@ -98,12 +98,13 @@ class BootScene extends Phaser.Scene {
         g.fillStyle(0x111111); g.fillRoundedRect(80, 21, 14, 18, 3);
         g.generateTexture('tank_boss', 95, 60);
         
-        // --- สิ่งกีดขวาง & ไอเทม (อัปเกรด) ---
+        // สิ่งกีดขวาง & ไอเทม
         g.clear(); g.fillStyle(0x000000, 0.4); g.fillRect(2, 2, 50, 50); g.fillStyle(0x4a4a4a); g.fillRect(0, 0, 50, 50); g.fillStyle(0x555555); g.fillRect(2, 2, 46, 46); g.lineStyle(2, 0x222222); g.strokeRect(0, 0, 50, 50); g.generateTexture('wall_normal', 52, 52);
         g.clear(); g.fillStyle(0x000000, 0.4); g.fillCircle(27, 27, 22); g.fillStyle(0x1a4314); g.fillCircle(25, 25, 22); g.fillStyle(0x255c1d); g.fillCircle(23, 23, 16); g.generateTexture('tree', 52, 52);
+        g.clear(); g.fillStyle(0x000000, 0.4); g.fillRoundedRect(17, 7, 20, 40, 10); g.fillStyle(0x28681e); g.fillRoundedRect(15, 5, 20, 40, 10); g.generateTexture('cactus', 52, 52);
+        g.clear(); g.fillStyle(0x000000, 0.4); g.fillCircle(27, 37, 15); g.fillStyle(0xeeeeee); g.fillCircle(25, 35, 15); g.fillCircle(25, 15, 10); g.generateTexture('snowman', 52, 52);
         g.clear(); g.fillStyle(0xdddddd); g.fillRoundedRect(0, 0, 26, 26, 4); g.fillStyle(0xffffff); g.fillRoundedRect(2, 2, 22, 22, 2); g.fillStyle(0xcc0000); g.fillRect(10, 4, 6, 18); g.fillRect(4, 10, 18, 6); g.generateTexture('medkit', 26, 26);
         
-        // กระสุนเรืองแสง
         g.clear(); g.fillStyle(0xffffcc); g.fillRoundedRect(0, 0, 16, 6, 3); g.fillStyle(0xffaa00); g.strokeRoundedRect(0, 0, 16, 6, 3); g.generateTexture('bullet', 16, 6);
         g.clear(); g.fillStyle(0xffcccc); g.fillRoundedRect(0, 0, 16, 6, 3); g.fillStyle(0xff3300); g.strokeRoundedRect(0, 0, 16, 6, 3); g.generateTexture('enemy_bullet', 16, 6);
         g.clear(); g.fillStyle(0xffaa00); g.fillCircle(4, 4, 4); g.generateTexture('particle', 8, 8);
@@ -116,7 +117,6 @@ class BootScene extends Phaser.Scene {
 class MainMenu extends Phaser.Scene {
     constructor() { super('MainMenu'); }
     create() {
-        // ฉากหลังแบบมีตาราง
         this.add.grid(400, 300, 800, 600, 50, 50, 0x111111, 1, 0x222222, 0.5);
         this.add.text(400, 150, 'รถถังโชกุน', { fontFamily: 'Kanit', fontSize: '80px', fill: '#00ff66', stroke: '#003311', strokeThickness: 10, shadow: { offsetX: 3, offsetY: 3, color: '#000', blur: 10, fill: true } }).setOrigin(0.5);
         
@@ -248,26 +248,36 @@ class GameLevel extends Phaser.Scene {
     }
 
     buildMap() {
+        let emptySpaces = []; // เก็บตำแหน่งที่ว่าง
+
         for (let row = 0; row < DEFAULT_MAP.length; row++) {
             for (let col = 0; col < DEFAULT_MAP[row].length; col++) {
                 let char = DEFAULT_MAP[row][col];
                 let x = col * 50 + 25; let y = row * 50 + 25;
+                
                 if (char === 'W') this.walls.create(x, y, 'wall_normal');
-                else if (char === 'O') this.obstacles.create(x, y, this.levelData.obsKey).body.setSize(40, 40);
+                // เอาการบีบ Hitbox ออก เพื่อแก้ปัญหากล่องการชนล่องหน
+                else if (char === 'O') this.obstacles.create(x, y, this.levelData.obsKey);
                 else if (char === 'H') this.items.create(x, y, 'medkit');
                 else if (char === 'P') this.player.setPosition(x, y);
+                else if (char === '.') emptySpaces.push({x: x, y: y}); // เก็บพิกัดว่าง
             }
         }
 
+        // สุ่มตำแหน่งเพื่อไม่ให้เกิดซ้ำจุดเดิม
+        Phaser.Utils.Array.Shuffle(emptySpaces);
+
+        // ให้ศัตรูเกิดเฉพาะในที่ว่าง
         for(let i=0; i<this.levelData.enemies; i++) {
-            let enemy = this.enemies.create(Phaser.Math.Between(100, 700), Phaser.Math.Between(100, 500), 'tank_enemy');
+            let spawnPt = emptySpaces[i % emptySpaces.length];
+            let enemy = this.enemies.create(spawnPt.x, spawnPt.y, 'tank_enemy');
             enemy.setCollideWorldBounds(true).setBounce(1);
             enemy.setAngle(Phaser.Math.Between(0, 3) * 90);
             this.physics.velocityFromRotation(enemy.rotation, this.levelData.speed, enemy.body.velocity);
         }
 
         if (this.levelData.boss) {
-            let boss = this.enemies.create(400, 300, 'tank_boss');
+            let boss = this.enemies.create(425, 75, 'tank_boss'); // กำหนดจุดเกิดบอสบนที่โล่ง
             boss.setCollideWorldBounds(true).setBounce(1);
             boss.setData('isBoss', true); boss.setData('hp', 15);
             boss.setAngle(Phaser.Math.Between(0, 3) * 90);
@@ -306,7 +316,7 @@ class GameLevel extends Phaser.Scene {
         let bullet = this.bullets.get(this.player.x, this.player.y, 'bullet');
         if (bullet) {
             try { this.sound.play('shoot', { volume: 0.4 }); } catch(e){}
-            this.cameras.main.shake(80, 0.005); // เอฟเฟกต์จอสั่นเบาๆ เวลายิง
+            this.cameras.main.shake(80, 0.005); 
             bullet.setActive(true).setVisible(true).enableBody(true, this.player.x, this.player.y, true, true);
             let angle = this.player.rotation; 
             bullet.setRotation(angle); 
@@ -379,7 +389,7 @@ class GameLevel extends Phaser.Scene {
         }
 
         try { this.sound.play('explode', { volume: 0.7 }); } catch(e){}
-        this.cameras.main.shake(150, isBoss ? 0.02 : 0.01); // จอสั่นแรงขึ้นตอนศัตรูตาย
+        this.cameras.main.shake(150, isBoss ? 0.02 : 0.01); 
         this.createExplosion(enemy.x, enemy.y, isBoss ? 0xcc00ff : 0xff5500, isBoss ? 4 : 2);
         enemy.disableBody(true, true);
         
