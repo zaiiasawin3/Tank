@@ -7,7 +7,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.60.0/phaser.min.js"></script>
     <style>
         body { margin: 0; background-color: #1a1a1a; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; font-family: 'Kanit', sans-serif; }
-        canvas { box-shadow: 0 10px 40px rgba(0,0,0,0.9); }
+        canvas { box-shadow: 0 10px 40px rgba(0,0,0,0.9); border-radius: 8px; }
     </style>
 </head>
 <body>
@@ -49,19 +49,20 @@ class BootScene extends Phaser.Scene {
         this.load.audio('pickup', 'https://labs.phaser.io/assets/audio/SoundEffects/pickup.mp3');
     }
     create() {
+        // ตั้งค่าปุ่มเริ่มต้นถ้ายังไม่มี
         if(!localStorage.getItem('tankKeys')) {
-            localStorage.setItem('tankKeys', JSON.stringify({ up: 87, down: 83, left: 65, right: 68, shoot: 32 })); // Default WASD + Space
+            localStorage.setItem('tankKeys', JSON.stringify({ up: 87, down: 83, left: 65, right: 68, shoot: 32 })); 
         }
         
         let g = this.add.graphics();
-        // Player Tank
+        // รถถังผู้เล่น
         g.clear(); g.fillStyle(0x111111); g.fillRect(5, 2, 40, 10); g.fillRect(5, 28, 40, 10); g.fillStyle(0x2d5a27); g.fillRoundedRect(10, 8, 36, 24, 4); g.fillStyle(0x111111); g.fillRect(28, 17, 30, 6); g.generateTexture('tank_player', 64, 40);
-        // Enemy Tank
+        // รถถังศัตรู
         g.clear(); g.fillStyle(0x111111); g.fillRect(5, 2, 40, 10); g.fillRect(5, 28, 40, 10); g.fillStyle(0x8a2525); g.fillRoundedRect(10, 8, 36, 24, 4); g.fillStyle(0x111111); g.fillRect(28, 17, 30, 6); g.generateTexture('tank_enemy', 64, 40);
-        // Boss Tank
+        // รถถังบอส
         g.clear(); g.fillStyle(0x111111); g.fillRect(5, 2, 60, 14); g.fillRect(5, 44, 60, 14); g.fillStyle(0x311b5e); g.fillRoundedRect(15, 12, 50, 36, 6); g.fillStyle(0x111111); g.fillRect(40, 26, 45, 8); g.generateTexture('tank_boss', 90, 60);
         
-        // Props & Items
+        // สิ่งกีดขวางและไอเทม
         g.clear(); g.fillStyle(0x4a4a4a); g.fillRect(0, 0, 50, 50); g.lineStyle(2, 0x222222); g.strokeRect(0, 0, 50, 50); g.generateTexture('wall_normal', 50, 50);
         g.clear(); g.fillStyle(0xff2222); g.fillCircle(10, 10, 6); g.fillCircle(20, 10, 6); g.fillTriangle(4, 12, 26, 12, 15, 25); g.generateTexture('heart', 30, 30);
         g.clear(); g.fillStyle(0x1a4314); g.fillCircle(25, 25, 22); g.generateTexture('tree', 50, 50);
@@ -81,7 +82,7 @@ class MainMenu extends Phaser.Scene {
     create() {
         this.add.text(400, 150, 'รถถังโชกุน', { fontFamily: 'Kanit', fontSize: '80px', fill: '#0f0', stroke: '#000', strokeThickness: 8 }).setOrigin(0.5);
         
-        let startBtn = this.createButton(400, 300, 'เริ่มเกมใหม่', () => {
+        this.createButton(400, 300, 'เริ่มเกมใหม่', () => {
             this.registry.set('totalScore', 0);
             this.scene.start('GameLevel', { level: 1, hp: 3 });
         });
@@ -112,15 +113,16 @@ class SettingsMenu extends Phaser.Scene {
     constructor() { super('SettingsMenu'); }
     create() {
         this.keys = JSON.parse(localStorage.getItem('tankKeys'));
-        this.add.text(400, 100, 'ตั้งค่าปุ่ม (คลิกที่ปุ่มเพื่อเปลี่ยน)', { fontFamily: 'Kanit', fontSize: '40px', fill: '#fff' }).setOrigin(0.5);
+        this.add.text(400, 80, 'ตั้งค่าปุ่ม (คลิกที่ปุ่มเพื่อเปลี่ยน)', { fontFamily: 'Kanit', fontSize: '36px', fill: '#fff' }).setOrigin(0.5);
 
-        this.createKeySet(250, 'เดินขึ้น', 'up');
-        this.createKeySet(330, 'เดินลง', 'down');
-        this.createKeySet(410, 'เดินซ้าย', 'left');
-        this.createKeySet(490, 'เดินขวา', 'right');
-        this.createKeySet(570, 'ยิง', 'shoot');
+        this.createKeySet(160, 'เดินขึ้น', 'up');
+        this.createKeySet(240, 'เดินลง', 'down');
+        this.createKeySet(320, 'เดินซ้าย', 'left');
+        this.createKeySet(400, 'เดินขวา', 'right');
+        this.createKeySet(480, 'ยิง', 'shoot');
 
-        let backBtn = this.add.text(400, 650, 'บันทึกและกลับ', { fontFamily: 'Kanit', fontSize: '30px', fill: '#0f0', backgroundColor: '#222', padding: {x:15, y:10} }).setOrigin(0.5).setInteractive();
+        let backBtn = this.add.text(400, 560, 'บันทึกและกลับหน้าหลัก', { fontFamily: 'Kanit', fontSize: '28px', fill: '#0f0', backgroundColor: '#222', padding: {x:20, y:10} }).setOrigin(0.5).setInteractive();
+        
         backBtn.on('pointerdown', () => {
             localStorage.setItem('tankKeys', JSON.stringify(this.keys));
             this.scene.start('MainMenu');
@@ -136,6 +138,7 @@ class SettingsMenu extends Phaser.Scene {
             this.input.keyboard.once('keydown', (event) => {
                 this.keys[keyName] = event.keyCode;
                 btn.setText(this.getKeyChar(event.keyCode));
+                localStorage.setItem('tankKeys', JSON.stringify(this.keys));
             });
         });
     }
@@ -162,7 +165,7 @@ class GameLevel extends Phaser.Scene {
     create() {
         this.isGameOver = false;
         this.enemiesKilled = 0;
-        this.customKeys = JSON.parse(localStorage.getItem('tankKeys'));
+        this.customKeys = JSON.parse(localStorage.getItem('tankKeys')) || { up: 87, down: 83, left: 65, right: 68, shoot: 32 };
 
         // Background
         this.add.grid(400, 300, 800, 600, 50, 50, this.levelData.bgColor, 1, this.levelData.gridColor, 0.5);
@@ -175,26 +178,24 @@ class GameLevel extends Phaser.Scene {
         
         this.player = this.physics.add.image(0, 0, 'tank_player');
         this.player.setCollideWorldBounds(true).setDepth(10);
+        this.player.setAngle(-90); // หันขึ้นตอนเริ่มด่าน
 
         this.buildMap();
 
-        // UI Top Left
+        // UI 
         this.uiText = this.add.text(20, 15, '', { fontFamily: 'Kanit', fontSize: '22px', fill: '#fff', stroke: '#000', strokeThickness: 5 }).setDepth(20);
         this.heartIcons = [];
         this.updateUI();
 
-        // UI Save Button (Top Right)
         let saveBtn = this.add.text(780, 15, '💾 บันทึกเกม', { fontFamily: 'Kanit', fontSize: '20px', fill: '#fff', backgroundColor: '#005500', padding: {x: 10, y: 5} }).setOrigin(1, 0).setInteractive().setDepth(20);
         saveBtn.on('pointerdown', () => this.saveGame());
 
         this.bullets = this.physics.add.group({ classType: Phaser.Physics.Arcade.Image, maxSize: 30, runChildUpdate: true });
         this.enemyBullets = this.physics.add.group({ classType: Phaser.Physics.Arcade.Image, maxSize: 50, runChildUpdate: true });
         
-        // Shoot Key
+        // ยิงปืน
         this.input.keyboard.on(`keydown-${this.customKeys.shoot}`, () => this.shoot());
-        this.input.keyboard.on('keydown-SPACE', () => this.shoot()); // Fallback space
-        
-        // Mouse/Touch shoot (Optional: anywhere on screen)
+        this.input.keyboard.on('keydown-SPACE', () => this.shoot()); // ปุ่มสำรอง
         this.input.on('pointerdown', () => this.shoot());
 
         // Colliders
@@ -209,7 +210,7 @@ class GameLevel extends Phaser.Scene {
         this.physics.add.overlap(this.player, this.items, this.collectItem, null, this);
 
         // AI Loop
-        this.time.addEvent({ delay: 1000, callback: this.processEnemyAI, callbackScope: this, loop: true });
+        this.time.addEvent({ delay: 1200, callback: this.processEnemyAI, callbackScope: this, loop: true });
     }
 
     buildMap() {
@@ -225,24 +226,28 @@ class GameLevel extends Phaser.Scene {
             }
         }
 
-        // Spawn Enemies randomly in empty spaces
         for(let i=0; i<this.levelData.enemies; i++) {
             let ex = Phaser.Math.Between(100, 700); let ey = Phaser.Math.Between(100, 500);
             let enemy = this.enemies.create(ex, ey, 'tank_enemy');
             enemy.setCollideWorldBounds(true).setBounce(1);
-            enemy.setVelocity(Phaser.Math.Between(-this.levelData.speed, this.levelData.speed), Phaser.Math.Between(-this.levelData.speed, this.levelData.speed));
-            enemy.setAngle(Phaser.Math.Between(0, 3) * 90);
+            let dir = Phaser.Math.Between(0, 3) * 90;
+            enemy.setAngle(dir);
+            this.physics.velocityFromRotation(enemy.rotation, this.levelData.speed, enemy.body.velocity);
         }
 
         if (this.levelData.boss) {
             let boss = this.enemies.create(400, 300, 'tank_boss');
             boss.setCollideWorldBounds(true).setBounce(1);
             boss.setData('isBoss', true); boss.setData('hp', 15);
+            let dir = Phaser.Math.Between(0, 3) * 90;
+            boss.setAngle(dir);
+            this.physics.velocityFromRotation(boss.rotation, this.levelData.speed, boss.body.velocity);
         }
     }
 
     update() {
         if (this.isGameOver || !this.player.active) return;
+        
         this.player.setVelocity(0);
 
         let k = this.customKeys;
@@ -251,7 +256,7 @@ class GameLevel extends Phaser.Scene {
         let isLeft = this.input.keyboard.addKey(k.left).isDown || this.input.keyboard.addKey(37).isDown;
         let isRight = this.input.keyboard.addKey(k.right).isDown || this.input.keyboard.addKey(39).isDown;
 
-        // 4-Way Movement (No diagonal)
+        // บังคับ 4 ทิศทาง ห้ามเดินเฉียง
         if (isUp) {
             this.player.setVelocityY(-200); this.player.setAngle(-90);
         } else if (isDown) {
@@ -281,12 +286,14 @@ class GameLevel extends Phaser.Scene {
         if (bullet) {
             try { this.sound.play('shoot', { volume: 0.3 }); } catch(e){}
             bullet.setActive(true).setVisible(true).enableBody(true, this.player.x, this.player.y, true, true);
+            
             let angle = this.player.rotation; 
             bullet.setRotation(angle); 
             bullet.x += Math.cos(angle) * 35; bullet.y += Math.sin(angle) * 35;
             this.physics.velocityFromRotation(angle, 700, bullet.body.velocity);
             
-            this.time.delayedCall(2000, () => { if(bullet.active) bullet.disableBody(true, true); });
+            // ล้างกระสุนอัตโนมัติเมื่อเวลาผ่านไปเพื่อป้องกันบั๊กกระสุนเต็มจอ
+            this.time.delayedCall(1500, () => { if(bullet.active) bullet.disableBody(true, true); });
         }
     }
 
@@ -295,16 +302,16 @@ class GameLevel extends Phaser.Scene {
         
         this.enemies.children.iterate((enemy) => {
             if (enemy && enemy.active) {
-                // 1. ตรวจสอบระยะห่างจากผู้เล่น
                 let distance = Phaser.Math.Distance.Between(enemy.x, enemy.y, this.player.x, this.player.y);
                 
-                // 2. ถ้าอยู่ใกล้ ให้หันหน้าและยิงตรงๆ ไปด้านหน้า
-                if(distance < 400 && Phaser.Math.Between(0, 100) > 40) {
+                // ถ้าระยะใกล้และสุ่มติด 40% ให้โจมตี
+                if(distance < 450 && Phaser.Math.Between(0, 100) > 60) {
                     let angleToPlayer = Phaser.Math.Angle.Between(enemy.x, enemy.y, this.player.x, this.player.y);
                     
-                    // ปัดเศษองศาให้หันเป็น 4 ทิศทาง
+                    // ปัดเศษองศาให้หันหน้าแค่ 4 ทิศทาง (ซ้าย ขวา บน ล่าง)
                     let snapAngle = Math.round(angleToPlayer / (Math.PI/2)) * (Math.PI/2);
                     enemy.setRotation(snapAngle);
+                    enemy.setVelocity(0); // หยุดเดินก่อนยิง
                     
                     let bullet = this.enemyBullets.get(enemy.x, enemy.y, 'enemy_bullet');
                     if (bullet) {
@@ -314,12 +321,17 @@ class GameLevel extends Phaser.Scene {
                         bullet.x += Math.cos(snapAngle) * 35; bullet.y += Math.sin(snapAngle) * 35;
                         this.physics.velocityFromRotation(snapAngle, 400, bullet.body.velocity);
                         
-                        this.time.delayedCall(2000, () => { if(bullet.active) bullet.disableBody(true, true); });
+                        this.time.delayedCall(1500, () => { if(bullet.active) bullet.disableBody(true, true); });
                     }
-                    // ยิงเสร็จสุ่มเดินหนี ไม่ให้เกาะกลุ่ม
-                    enemy.setVelocity(Phaser.Math.Between(-this.levelData.speed, this.levelData.speed), Phaser.Math.Between(-this.levelData.speed, this.levelData.speed));
+                    
+                    // ยิงเสร็จสุ่มเดินหนีเพื่อลดการเกาะกลุ่ม
+                    this.time.delayedCall(300, () => {
+                        let escapeDir = Phaser.Math.Between(0, 3) * (Math.PI/2);
+                        enemy.setRotation(escapeDir);
+                        this.physics.velocityFromRotation(escapeDir, this.levelData.speed, enemy.body.velocity);
+                    });
                 } else {
-                    // 3. ถ้าอยู่ไกล หรือสุ่มได้โหมดเดิน (Wander) ให้เดินสะเปะสะปะตาม 4 ทิศทาง
+                    // สุ่มเดินสะเปะสะปะตาม 4 ทิศทาง
                     let dir = Phaser.Math.Between(0, 3) * (Math.PI/2);
                     enemy.setRotation(dir);
                     this.physics.velocityFromRotation(dir, this.levelData.speed, enemy.body.velocity);
@@ -401,7 +413,6 @@ class GameLevel extends Phaser.Scene {
         this.isGameOver = true;
         this.physics.pause();
         
-        // สร้างหน้าต่างโปร่งแสงสีดำทับ
         let bg = this.add.rectangle(400, 300, 800, 600, 0x000000, 0.7).setDepth(100);
         
         if (isWin) {
