@@ -183,7 +183,12 @@ class BaseLevel extends Phaser.Scene {
 
         this.bullets = this.physics.add.group({ classType: Phaser.Physics.Arcade.Image, maxSize: 30, runChildUpdate: true });
         this.enemyBullets = this.physics.add.group({ classType: Phaser.Physics.Arcade.Image, maxSize: 50, runChildUpdate: true });
-        this.cursors = this.input.keyboard.addKeys({ W: 87, A: 65, S: 83, D: 68, SPACE: 32 });
+        
+        // อัปเดต: เพิ่มการรองรับปุ่มลูกศร (UP, DOWN, LEFT, RIGHT) ให้ใช้ร่วมกับ WASD
+        this.cursors = this.input.keyboard.addKeys({ 
+            W: 87, A: 65, S: 83, D: 68, SPACE: 32,
+            UP: 38, DOWN: 40, LEFT: 37, RIGHT: 39 
+        });
 
         this.setupMobileControls();
 
@@ -323,11 +328,11 @@ class BaseLevel extends Phaser.Scene {
         let speed = 200;
         let vx = 0; let vy = 0;
 
-        // คีย์บอร์ด
-        if (this.cursors.W.isDown) vy -= speed;
-        if (this.cursors.S.isDown) vy += speed;
-        if (this.cursors.A.isDown) vx -= speed;
-        if (this.cursors.D.isDown) vx += speed;
+        // คีย์บอร์ด (รองรับทั้ง WASD และ ลูกศรทิศทาง)
+        if (this.cursors.W.isDown || this.cursors.UP.isDown) vy -= speed;
+        if (this.cursors.S.isDown || this.cursors.DOWN.isDown) vy += speed;
+        if (this.cursors.A.isDown || this.cursors.LEFT.isDown) vx -= speed;
+        if (this.cursors.D.isDown || this.cursors.RIGHT.isDown) vx += speed;
 
         // จอยสติ๊กซ้าย
         if (this.joyActive) {
