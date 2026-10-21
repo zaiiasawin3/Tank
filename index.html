@@ -57,9 +57,6 @@ class BootScene extends Phaser.Scene {
         g.clear(); g.fillStyle(0xff5500); g.fillRoundedRect(0, 0, 14, 6, 3); g.fillStyle(0xffffff); g.fillRoundedRect(2, 1, 8, 4, 2); g.generateTexture('enemy_bullet', 14, 6);
         g.clear(); g.fillStyle(0xffaa00); g.fillRect(0, 0, 6, 6); g.generateTexture('particle', 6, 6);
 
-        // D-Pad Button Graphic
-        g.clear(); g.fillStyle(0x444444, 0.8); g.fillCircle(35, 35, 35); g.fillStyle(0x777777, 1); g.fillCircle(35, 35, 25); g.generateTexture('dpad_btn', 70, 70);
-        
         this.scene.start('MainMenu');
     }
 }
@@ -103,7 +100,7 @@ class MainMenu extends Phaser.Scene {
             this.scene.start('DifficultyMenu');
         });
 
-        // ตรวจสอบข้อมูลเซฟเกม
+        // Check for saved game
         let savedDataStr = localStorage.getItem('shogunTankSave');
         if (savedDataStr) {
             let savedData = JSON.parse(savedDataStr);
@@ -157,9 +154,9 @@ class DifficultyMenu extends Phaser.Scene {
             });
         };
 
-        makeBtn(260, 'ง่าย (Easy)', '#00ff00', 'easy');
-        makeBtn(370, 'ปานกลาง (Medium)', '#ffff00', 'medium');
-        makeBtn(480, 'ยาก (Hard)', '#ff3333', 'hard');
+        makeBtn(260, 'ง่าย (Easy) - เลือด 5', '#00ff00', 'easy');
+        makeBtn(370, 'ปานกลาง (Medium) - เลือด 3', '#ffff00', 'medium');
+        makeBtn(480, 'ยาก (Hard) - เลือด 2, ศัตรูไว', '#ff3333', 'hard');
     }
 }
 
@@ -189,7 +186,7 @@ class BaseLevel extends Phaser.Scene {
             this.enemySpeed = this.baseEnemySpeed * 0.7;
             this.enemyFireRate = this.baseEnemyFireRate * 1.5;
         } else if (diff === 'hard') {
-            this.playerHP = 3;
+            this.playerHP = 2; // Hard is 2 HP
             this.enemySpeed = this.baseEnemySpeed * 1.3;
             this.enemyFireRate = this.baseEnemyFireRate * 0.7;
         } else {
@@ -224,17 +221,7 @@ class BaseLevel extends Phaser.Scene {
         this.enemyBullets = this.physics.add.group({ classType: Phaser.Physics.Arcade.Image, maxSize: 30, runChildUpdate: true });
         this.cursors = this.input.keyboard.addKeys({ W: 87, A: 65, S: 83, D: 68 });
 
-        this.createMobileUI();
-
-        this.input.on('pointerdown', (pointer) => {
-            if (this.isGameOver) {
-                this.scene.restart();
-            } else {
-                // Ensure we don't shoot when interacting with the D-Pad
-                if (pointer.x < 280 && pointer.y > 380) return;
-                this.shoot(pointer);
-            }
-        });
+        this.createVirtualJoystick();
 
         let blockers = [this.walls, this.obstacles];
         this.physics.add.collider(this.player, blockers);
@@ -249,43 +236,54 @@ class BaseLevel extends Phaser.Scene {
         this.enemyShootTimer = this.time.addEvent({ delay: this.enemyFireRate, callback: this.enemyShoot, callbackScope: this, loop: true });
     }
 
-    createMobileUI() {
-        this.moveUp = false;
-        this.moveDown = false;
-        this.moveLeft = false;
-        this.moveRight = false;
+    createVirtualJoystick() {
+        // Virtual Joystick Graphics
+        this.joyBase = this.add.circle(0, 0, 50, 0x444444, 0.5).setDepth(100).setScrollFactor(0).setVisible(false);
+        this.joyThumb = this.add.circle(0, 0, 25, 0xaaaaaa, 0.8).setDepth(101).setScrollFactor(0).setVisible(false);
+        this.joyActive = false;
+        this.joyPointerId = null;
+        this.joyVector = new Phaser.Math.Vector2(0, 0);
 
-        let cx = 130;
-        let cy = 470;
-        let gap = 75;
-        let alphaNormal = 0.5;
-
-        let createBtn = (x, y, label, flagName) => {
-            let btn = this.add.image(x, y, 'dpad_btn').setAlpha(alphaNormal).setInteractive().setDepth(100).setScrollFactor(0);
+        this.input.on('pointerdown', (pointer) => {
+            if (this.isGameOver) return; // handled in endLevel buttons
             
-            // Add tiny direction label
-            this.add.text(x, y, label, { fontSize: '24px', fill: '#fff', fontStyle: 'bold' }).setOrigin(0.5).setDepth(101).setScrollFactor(0);
+            if (pointer.x < 400 && !this.joyActive) { 
+                // Left half of screen -> Activate joystick
+                this.joyActive = true;
+                this.joyPointerId = pointer.id;
+                this.joyBase.setPosition(pointer.x, pointer.y).setVisible(true);
+                this.joyThumb.setPosition(pointer.x, pointer.y).setVisible(true);
+            } else if (pointer.x >= 400 || this.sys.game.device.os.desktop) { 
+                // Right half of screen (or any click on Desktop) -> Shoot
+                this.shoot(pointer);
+            }
+        });
 
-            btn.on('pointerdown', (pointer, localX, localY, event) => {
-                this[flagName] = true;
-                btn.setAlpha(0.9);
-                event.stopPropagation(); // Prevent firing bullet
-            });
-            btn.on('pointerup', (pointer, localX, localY, event) => {
-                this[flagName] = false;
-                btn.setAlpha(alphaNormal);
-                event.stopPropagation();
-            });
-            btn.on('pointerout', () => {
-                this[flagName] = false;
-                btn.setAlpha(alphaNormal);
-            });
-        };
+        this.input.on('pointermove', (pointer) => {
+            if (this.joyActive && pointer.id === this.joyPointerId) {
+                let dist = Phaser.Math.Distance.Between(this.joyBase.x, this.joyBase.y, pointer.x, pointer.y);
+                let maxDist = 50;
+                let angle = Phaser.Math.Angle.Between(this.joyBase.x, this.joyBase.y, pointer.x, pointer.y);
+                
+                if (dist > maxDist) dist = maxDist;
+                
+                this.joyThumb.x = this.joyBase.x + Math.cos(angle) * dist;
+                this.joyThumb.y = this.joyBase.y + Math.sin(angle) * dist;
+                
+                this.joyVector.x = (dist / maxDist) * Math.cos(angle);
+                this.joyVector.y = (dist / maxDist) * Math.sin(angle);
+            }
+        });
 
-        createBtn(cx, cy - gap, 'W', 'moveUp');
-        createBtn(cx, cy + gap, 'S', 'moveDown');
-        createBtn(cx - gap, cy, 'A', 'moveLeft');
-        createBtn(cx + gap, cy, 'D', 'moveRight');
+        this.input.on('pointerup', (pointer) => {
+            if (this.joyActive && pointer.id === this.joyPointerId) {
+                this.joyActive = false;
+                this.joyPointerId = null;
+                this.joyBase.setVisible(false);
+                this.joyThumb.setVisible(false);
+                this.joyVector.set(0, 0);
+            }
+        });
     }
 
     buildMap() {
@@ -304,13 +302,11 @@ class BaseLevel extends Phaser.Scene {
                 else if (char === 'P') this.player.setPosition(x, y);
                 else if (char === 'E') {
                     let enemy = this.enemies.create(x, y, 'tank_enemy');
-                    enemy.setCollideWorldBounds(true); enemy.setBounce(1);
-                    enemy.setVelocity(Phaser.Math.Between(-this.enemySpeed, this.enemySpeed), Phaser.Math.Between(-this.enemySpeed, this.enemySpeed));
+                    enemy.setCollideWorldBounds(true); enemy.setBounce(0.5);
                 }
                 else if (char === 'B') {
                     let boss = this.enemies.create(x, y, 'tank_boss');
-                    boss.setCollideWorldBounds(true); boss.setBounce(1);
-                    boss.setVelocity(Phaser.Math.Between(-this.enemySpeed, this.enemySpeed), Phaser.Math.Between(-this.enemySpeed, this.enemySpeed));
+                    boss.setCollideWorldBounds(true); boss.setBounce(0.5);
                     boss.setData('isBoss', true); boss.setData('hp', 10);
                 }
                 else if (char === 'H') this.items.create(x, y, 'medkit');
@@ -322,35 +318,48 @@ class BaseLevel extends Phaser.Scene {
         if (this.isGameOver) return;
         this.player.setVelocity(0);
 
-        let isW = this.cursors.W.isDown || this.moveUp;
-        let isS = this.cursors.S.isDown || this.moveDown;
-        let isA = this.cursors.A.isDown || this.moveLeft;
-        let isD = this.cursors.D.isDown || this.moveRight;
+        let speed = 200;
+        let vx = 0;
+        let vy = 0;
 
-        if (isW) this.player.setVelocityY(-200); else if (isS) this.player.setVelocityY(200);
-        if (isA) this.player.setVelocityX(-200); else if (isD) this.player.setVelocityX(200);
+        // PC Controls
+        if (this.cursors.W.isDown) vy -= speed;
+        if (this.cursors.S.isDown) vy += speed;
+        if (this.cursors.A.isDown) vx -= speed;
+        if (this.cursors.D.isDown) vx += speed;
 
-        // Find the correct pointer for aiming (exclude the D-Pad interactions)
-        let aimPointer = null;
-        if (!this.sys.game.device.os.desktop) {
-            let p1 = this.input.pointer1;
-            let p2 = this.input.pointer2;
-            let p3 = this.input.activePointer;
-            let isValidAim = (p) => p.isDown && !(p.x < 280 && p.y > 380);
-            if (isValidAim(p1)) aimPointer = p1;
-            else if (isValidAim(p2)) aimPointer = p2;
-            else if (isValidAim(p3)) aimPointer = p3;
-        } else {
-            aimPointer = this.input.activePointer;
+        // Joystick Controls overrides if active
+        if (this.joyActive) {
+            vx = this.joyVector.x * speed;
+            vy = this.joyVector.y * speed;
         }
 
-        if (aimPointer) {
+        this.player.setVelocity(vx, vy);
+
+        // Aiming Logic
+        let aimPointer = null;
+        if (this.sys.game.device.os.desktop) {
+            aimPointer = this.input.activePointer;
+        } else {
+            // Find a pointer that is down and on the right side
+            if (this.input.pointer1.isDown && this.input.pointer1.x >= 400) aimPointer = this.input.pointer1;
+            else if (this.input.pointer2.isDown && this.input.pointer2.x >= 400) aimPointer = this.input.pointer2;
+        }
+
+        if (aimPointer && (aimPointer.isDown || this.sys.game.device.os.desktop)) {
             let angle = Phaser.Math.Angle.Between(this.player.x, this.player.y, aimPointer.x, aimPointer.y);
             this.player.setRotation(angle);
         }
 
+        // Enemy AI: Track player and move forward
         this.enemies.children.iterate((enemy) => {
-            if(enemy && enemy.active) enemy.setRotation(Math.atan2(enemy.body.velocity.y, enemy.body.velocity.x));
+            if(enemy && enemy.active) {
+                let targetAngle = Phaser.Math.Angle.Between(enemy.x, enemy.y, this.player.x, this.player.y);
+                // Rotate smoothly towards player
+                enemy.rotation = Phaser.Math.Angle.RotateTo(enemy.rotation, targetAngle, 0.05);
+                // Move forward in the direction they are facing
+                this.physics.velocityFromRotation(enemy.rotation, this.enemySpeed, enemy.body.velocity);
+            }
         });
     }
 
@@ -380,7 +389,9 @@ class BaseLevel extends Phaser.Scene {
             try { this.sound.play('shoot', { volume: 0.3 }); } catch(e){}
             bullet.setActive(true).setVisible(true); bullet.enableBody(true, this.player.x, this.player.y, true, true);
             let angle = Phaser.Math.Angle.Between(this.player.x, this.player.y, pointer.x, pointer.y);
-            bullet.setRotation(angle); bullet.x += Math.cos(angle) * 35; bullet.y += Math.sin(angle) * 35;
+            bullet.setRotation(angle); 
+            bullet.x += Math.cos(angle) * 35; 
+            bullet.y += Math.sin(angle) * 35;
             this.physics.velocityFromRotation(angle, 700, bullet.body.velocity);
         }
     }
@@ -391,21 +402,18 @@ class BaseLevel extends Phaser.Scene {
             if (enemy.active) {
                 let distance = Phaser.Math.Distance.Between(enemy.x, enemy.y, this.player.x, this.player.y);
                 if(distance < 500) { 
-                    // คำนวณมุมที่ผู้เล่นอยู่เทียบกับศัตรู
                     let angleToPlayer = Phaser.Math.Angle.Between(enemy.x, enemy.y, this.player.x, this.player.y);
-                    // นำมุมหันหน้าของศัตรู (rotation) มาเทียบ
                     let enemyRotation = enemy.rotation;
-                    // หาความต่างของมุม (Wrap ให้อยู่ในช่วง -PI ถึง PI)
                     let diffAngle = Phaser.Math.Angle.Wrap(angleToPlayer - enemyRotation);
 
-                    // ถ้ายืนอยู่ด้านหน้าในระยะมุมไม่เกิน ~30 องศา (0.5 เรเดียน) ถึงจะยิง
-                    if (Math.abs(diffAngle) < 0.5) {
+                    // Shoot straight forward only if player is in front of the gun (~11 degrees tolerance)
+                    if (Math.abs(diffAngle) < 0.2) {
                         let bullet = this.enemyBullets.get(enemy.x, enemy.y, 'enemy_bullet');
                         if (bullet) {
                             try { this.sound.play('shoot', { volume: 0.1 }); } catch(e){}
                             bullet.setActive(true).setVisible(true); bullet.enableBody(true, enemy.x, enemy.y, true, true);
                             
-                            // บังคับให้กระสุนพุ่งออกไปตามทิศทางที่ปืนเล็งอยู่ (ข้างหน้า) เสมอ
+                            // Always fire forward relative to enemy rotation
                             bullet.setRotation(enemyRotation); 
                             bullet.x += Math.cos(enemyRotation) * 35; 
                             bullet.y += Math.sin(enemyRotation) * 35;
@@ -479,9 +487,8 @@ class BaseLevel extends Phaser.Scene {
         try { this.sound.play('pickup', { volume: 0.6 }); } catch(e){}
         item.destroy(); 
         
-        // Ensure max HP doesn't go extremely high
         let diff = this.registry.get('difficulty');
-        let maxHP = diff === 'easy' ? 8 : 5;
+        let maxHP = diff === 'easy' ? 8 : (diff === 'hard' ? 4 : 5);
         
         if(this.playerHP < maxHP) this.playerHP++;
         this.updateUI();
@@ -492,16 +499,17 @@ class BaseLevel extends Phaser.Scene {
         this.isGameOver = true;
         this.enemyShootTimer.remove();
         this.physics.pause();
+        
+        // Hide joystick immediately
+        if(this.joyBase) this.joyBase.setVisible(false);
+        if(this.joyThumb) this.joyThumb.setVisible(false);
+
         let textStyle = { fontFamily: '"Kanit", sans-serif', fontSize: '48px', fill: '#0f0', align: 'center', stroke: '#000', strokeThickness: 6 };
 
         if (isWin) {
             if (this.nextLevel) {
-                this.add.text(400, 220, 'ผ่านด่านแล้ว!', textStyle).setOrigin(0.5);
-                
-                let nextBtn = this.add.text(400, 310, '>> ไปด่านถัดไป <<', { ...textStyle, fontSize: '32px', fill: '#fff', backgroundColor: '#222', padding: { x: 20, y: 10 } }).setOrigin(0.5).setInteractive();
-                nextBtn.on('pointerdown', () => { this.scene.start(this.nextLevel); });
-
-                let saveBtn = this.add.text(400, 400, '[ บันทึกเกมและออก ]', { ...textStyle, fontSize: '28px', fill: '#0ff', backgroundColor: '#114444', padding: { x: 20, y: 10 } }).setOrigin(0.5).setInteractive();
+                // Button to Save & Exit AT THE VERY TOP (y=60)
+                let saveBtn = this.add.text(400, 60, '[ บันทึกเกมและกลับเมนูหลัก ]', { ...textStyle, fontSize: '26px', fill: '#0ff', backgroundColor: '#114444', padding: { x: 20, y: 10 } }).setOrigin(0.5).setInteractive();
                 saveBtn.on('pointerdown', () => {
                     let saveData = {
                         level: this.nextLevel,
@@ -515,6 +523,12 @@ class BaseLevel extends Phaser.Scene {
                         this.scene.start('MainMenu');
                     });
                 });
+
+                // Next Level texts in the middle
+                this.add.text(400, 260, 'ผ่านด่านแล้ว!', textStyle).setOrigin(0.5);
+                
+                let nextBtn = this.add.text(400, 360, '>> ไปด่านถัดไป <<', { ...textStyle, fontSize: '32px', fill: '#fff', backgroundColor: '#222', padding: { x: 20, y: 10 } }).setOrigin(0.5).setInteractive();
+                nextBtn.on('pointerdown', () => { this.scene.start(this.nextLevel); });
 
             } else {
                 textStyle.fill = '#ff0';
