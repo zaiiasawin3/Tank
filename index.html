@@ -265,6 +265,28 @@ class BaseLevel extends Phaser.Scene {
         this.input.on('pointerout', releaseJoy);
     }
 
+    setupEnemyAI(enemy) {
+        // กำหนดมุมเริ่มต้นแบบสุ่ม
+        enemy.setData('targetAngle', Phaser.Math.FloatBetween(-Math.PI, Math.PI));
+        
+        // Timer ให้ศัตรูเปลี่ยนทิศทางทุกๆ 1.5 - 3 วินาที
+        let moveTimer = this.time.addEvent({
+            delay: Phaser.Math.Between(1500, 3000),
+            callback: () => {
+                if (enemy && enemy.active && this.player && this.player.active) {
+                    // สุ่ม 40% หันหาผู้เล่นเพื่อจะยิง, 60% เดินลาดตระเวนสุ่มทิศทาง
+                    if (Phaser.Math.Between(1, 100) <= 40) {
+                        enemy.setData('targetAngle', Phaser.Math.Angle.Between(enemy.x, enemy.y, this.player.x, this.player.y));
+                    } else {
+                        enemy.setData('targetAngle', Phaser.Math.FloatBetween(-Math.PI, Math.PI));
+                    }
+                }
+            },
+            loop: true
+        });
+        enemy.setData('moveTimer', moveTimer);
+    }
+
     buildMap() {
         const tileSize = 50;
         for (let row = 0; row < this.mapLayout.length; row++) {
@@ -281,12 +303,14 @@ class BaseLevel extends Phaser.Scene {
                 else if (char === 'P') this.player.setPosition(x, y);
                 else if (char === 'E') {
                     let enemy = this.enemies.create(x, y, 'tank_enemy');
-                    enemy.setCollideWorldBounds(true); enemy.setBounce(0.5);
+                    enemy.setCollideWorldBounds(true); enemy.setBounce(0.8);
+                    this.setupEnemyAI(enemy);
                 }
                 else if (char === 'B') {
                     let boss = this.enemies.create(x, y, 'tank_boss');
-                    boss.setCollideWorldBounds(true); boss.setBounce(0.5);
+                    boss.setCollideWorldBounds(true); boss.setBounce(0.8);
                     boss.setData('isBoss', true); boss.setData('hp', 15);
+                    this.setupEnemyAI(boss);
                 }
                 else if (char === 'H') this.items.create(x, y, 'medkit');
             }
@@ -325,12 +349,12 @@ class BaseLevel extends Phaser.Scene {
             this.shoot(this.input.activePointer);
         }
 
-        // ศัตรูหันหน้าหาผู้เล่นเสมอ
+        // ศัตรูหันหน้าและเดินตามเป้าหมาย (targetAngle) ที่ AI ลาดตระเวนกำหนดไว้
         this.enemies.children.iterate((enemy) => {
             if(enemy && enemy.active) {
-                let targetAngle = Phaser.Math.Angle.Between(enemy.x, enemy.y, this.player.x, this.player.y);
-                enemy.rotation = Phaser.Math.Angle.RotateTo(enemy.rotation, targetAngle, 0.05); // ค่อยๆ หัน
-                this.physics.velocityFromRotation(enemy.rotation, this.enemySpeed, enemy.body.velocity); // เดินตรงไปข้างหน้าของตัวเอง
+                let targetAngle = enemy.getData('targetAngle');
+                enemy.rotation = Phaser.Math.Angle.RotateTo(enemy.rotation, targetAngle, 0.04); // ค่อยๆ หัน
+                this.physics.velocityFromRotation(enemy.rotation, this.enemySpeed, enemy.body.velocity); // เดินไปด้านหน้า
             }
         });
     }
@@ -449,6 +473,11 @@ class BaseLevel extends Phaser.Scene {
 
         try { this.sound.play('explode', { volume: 0.6 }); } catch(e){}
         this.createExplosion(enemy.x, enemy.y, isBoss ? 0xcc00ff : 0xff3300, isBoss ? 3 : 1.5);
+        
+        // ลบ Timer ทิ้งเมื่อศัตรูตาย เพื่อไม่ให้ทำงานค้างในระบบ
+        let moveTimer = enemy.getData('moveTimer');
+        if (moveTimer) moveTimer.remove();
+
         enemy.disableBody(true, true);
         
         this.enemiesKilled++;
