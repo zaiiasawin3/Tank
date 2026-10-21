@@ -181,9 +181,9 @@ class BaseLevel extends Phaser.Scene {
         this.uiText.setDepth(20);
         this.updateUI();
 
-        this.bullets = this.physics.add.group({ classType: Phaser.Physics.Arcade.Image, maxSize: 15, runChildUpdate: true });
-        this.enemyBullets = this.physics.add.group({ classType: Phaser.Physics.Arcade.Image, maxSize: 30, runChildUpdate: true });
-        this.cursors = this.input.keyboard.addKeys({ W: 87, A: 65, S: 83, D: 68 });
+        this.bullets = this.physics.add.group({ classType: Phaser.Physics.Arcade.Image, maxSize: 30, runChildUpdate: true });
+        this.enemyBullets = this.physics.add.group({ classType: Phaser.Physics.Arcade.Image, maxSize: 50, runChildUpdate: true });
+        this.cursors = this.input.keyboard.addKeys({ W: 87, A: 65, S: 83, D: 68, SPACE: 32 });
 
         this.setupMobileControls();
 
@@ -320,6 +320,11 @@ class BaseLevel extends Phaser.Scene {
             this.player.setRotation(angle);
         }
 
+        // ยิงด้วยปุ่ม Spacebar
+        if (this.cursors.SPACE && Phaser.Input.Keyboard.JustDown(this.cursors.SPACE)) {
+            this.shoot(this.input.activePointer);
+        }
+
         // ศัตรูหันหน้าหาผู้เล่นเสมอ
         this.enemies.children.iterate((enemy) => {
             if(enemy && enemy.active) {
@@ -371,6 +376,11 @@ class BaseLevel extends Phaser.Scene {
             bullet.x += Math.cos(angle) * 35; // ยิงออกจากปากกระบอก
             bullet.y += Math.sin(angle) * 35;
             this.physics.velocityFromRotation(angle, 700, bullet.body.velocity);
+
+            // ป้องกันกระสุนค้างในระบบ (ทำลายกระสุนทิ้งหากลอยออกไปนานเกิน 1.5 วินาที)
+            this.time.delayedCall(1500, () => {
+                if (bullet && bullet.active) bullet.disableBody(true, true);
+            });
         }
     }
 
@@ -397,6 +407,11 @@ class BaseLevel extends Phaser.Scene {
                             bullet.x += Math.cos(enemyRotation) * 35; 
                             bullet.y += Math.sin(enemyRotation) * 35;
                             this.physics.velocityFromRotation(enemyRotation, 400, bullet.body.velocity);
+
+                            // ป้องกันกระสุนค้างในระบบ
+                            this.time.delayedCall(2000, () => {
+                                if (bullet && bullet.active) bullet.disableBody(true, true);
+                            });
                         }
                     }
                 }
