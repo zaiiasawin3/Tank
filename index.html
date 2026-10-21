@@ -86,21 +86,45 @@ class MainMenu extends Phaser.Scene {
             strokeThickness: 4 
         }).setOrigin(0.5);
 
-        let startBtn = this.add.text(400, 450, '- คลิกหน้าจอเพื่อเริ่มเกม -', { 
+        let startBtn = this.add.text(400, 420, '- เริ่มเกมใหม่ -', { 
             fontFamily: '"Kanit", sans-serif', 
-            fontSize: '28px', 
+            fontSize: '32px', 
             fill: '#ffff00', 
             stroke: '#000', 
-            strokeThickness: 4 
-        }).setOrigin(0.5);
+            strokeThickness: 4,
+            backgroundColor: '#222',
+            padding: { x: 20, y: 10 }
+        }).setOrigin(0.5).setInteractive();
 
-        this.tweens.add({
-            targets: startBtn, alpha: 0.1, yoyo: true, repeat: -1, duration: 800
-        });
-
-        this.input.once('pointerdown', () => {
+        startBtn.on('pointerover', () => startBtn.setBackgroundColor('#444'));
+        startBtn.on('pointerout', () => startBtn.setBackgroundColor('#222'));
+        startBtn.on('pointerdown', () => {
+            this.registry.set('totalScore', 0);
             this.scene.start('DifficultyMenu');
         });
+
+        // ตรวจสอบข้อมูลเซฟเกม
+        let savedDataStr = localStorage.getItem('shogunTankSave');
+        if (savedDataStr) {
+            let savedData = JSON.parse(savedDataStr);
+            let contBtn = this.add.text(400, 510, '- เล่นต่อจากด่านที่บันทึก -', { 
+                fontFamily: '"Kanit", sans-serif', 
+                fontSize: '28px', 
+                fill: '#00ffff', 
+                stroke: '#000', 
+                strokeThickness: 4,
+                backgroundColor: '#114444',
+                padding: { x: 20, y: 10 }
+            }).setOrigin(0.5).setInteractive();
+
+            contBtn.on('pointerover', () => contBtn.setBackgroundColor('#226666'));
+            contBtn.on('pointerout', () => contBtn.setBackgroundColor('#114444'));
+            contBtn.on('pointerdown', () => {
+                this.registry.set('totalScore', savedData.score || 0);
+                this.registry.set('difficulty', savedData.difficulty || 'medium');
+                this.scene.start(savedData.level);
+            });
+        }
     }
 }
 
@@ -367,13 +391,26 @@ class BaseLevel extends Phaser.Scene {
             if (enemy.active) {
                 let distance = Phaser.Math.Distance.Between(enemy.x, enemy.y, this.player.x, this.player.y);
                 if(distance < 500) { 
-                    let bullet = this.enemyBullets.get(enemy.x, enemy.y, 'enemy_bullet');
-                    if (bullet) {
-                        try { this.sound.play('shoot', { volume: 0.1 }); } catch(e){}
-                        bullet.setActive(true).setVisible(true); bullet.enableBody(true, enemy.x, enemy.y, true, true);
-                        let angle = Phaser.Math.Angle.Between(enemy.x, enemy.y, this.player.x, this.player.y);
-                        bullet.setRotation(angle); bullet.x += Math.cos(angle) * 35; bullet.y += Math.sin(angle) * 35;
-                        this.physics.velocityFromRotation(angle, 400, bullet.body.velocity);
+                    // คำนวณมุมที่ผู้เล่นอยู่เทียบกับศัตรู
+                    let angleToPlayer = Phaser.Math.Angle.Between(enemy.x, enemy.y, this.player.x, this.player.y);
+                    // นำมุมหันหน้าของศัตรู (rotation) มาเทียบ
+                    let enemyRotation = enemy.rotation;
+                    // หาความต่างของมุม (Wrap ให้อยู่ในช่วง -PI ถึง PI)
+                    let diffAngle = Phaser.Math.Angle.Wrap(angleToPlayer - enemyRotation);
+
+                    // ถ้ายืนอยู่ด้านหน้าในระยะมุมไม่เกิน ~30 องศา (0.5 เรเดียน) ถึงจะยิง
+                    if (Math.abs(diffAngle) < 0.5) {
+                        let bullet = this.enemyBullets.get(enemy.x, enemy.y, 'enemy_bullet');
+                        if (bullet) {
+                            try { this.sound.play('shoot', { volume: 0.1 }); } catch(e){}
+                            bullet.setActive(true).setVisible(true); bullet.enableBody(true, enemy.x, enemy.y, true, true);
+                            
+                            // บังคับให้กระสุนพุ่งออกไปตามทิศทางที่ปืนเล็งอยู่ (ข้างหน้า) เสมอ
+                            bullet.setRotation(enemyRotation); 
+                            bullet.x += Math.cos(enemyRotation) * 35; 
+                            bullet.y += Math.sin(enemyRotation) * 35;
+                            this.physics.velocityFromRotation(enemyRotation, 400, bullet.body.velocity);
+                        }
                     }
                 }
             }
@@ -459,11 +496,30 @@ class BaseLevel extends Phaser.Scene {
 
         if (isWin) {
             if (this.nextLevel) {
-                this.add.text(400, 300, 'ผ่านด่านแล้ว\nคลิกเพื่อไปด่านถัดไป', textStyle).setOrigin(0.5);
-                this.input.once('pointerdown', () => { this.scene.start(this.nextLevel); });
+                this.add.text(400, 220, 'ผ่านด่านแล้ว!', textStyle).setOrigin(0.5);
+                
+                let nextBtn = this.add.text(400, 310, '>> ไปด่านถัดไป <<', { ...textStyle, fontSize: '32px', fill: '#fff', backgroundColor: '#222', padding: { x: 20, y: 10 } }).setOrigin(0.5).setInteractive();
+                nextBtn.on('pointerdown', () => { this.scene.start(this.nextLevel); });
+
+                let saveBtn = this.add.text(400, 400, '[ บันทึกเกมและออก ]', { ...textStyle, fontSize: '28px', fill: '#0ff', backgroundColor: '#114444', padding: { x: 20, y: 10 } }).setOrigin(0.5).setInteractive();
+                saveBtn.on('pointerdown', () => {
+                    let saveData = {
+                        level: this.nextLevel,
+                        score: this.registry.get('totalScore'),
+                        difficulty: this.registry.get('difficulty') || 'medium'
+                    };
+                    localStorage.setItem('shogunTankSave', JSON.stringify(saveData));
+                    saveBtn.setText('บันทึกสำเร็จ!');
+                    saveBtn.setBackgroundColor('#144111');
+                    this.time.delayedCall(1000, () => {
+                        this.scene.start('MainMenu');
+                    });
+                });
+
             } else {
                 textStyle.fill = '#ff0';
                 this.add.text(400, 300, 'ปราบสมุนและบอสสำเร็จ!\nคุณคือแชมเปี้ยน', textStyle).setOrigin(0.5);
+                localStorage.removeItem('shogunTankSave'); // เคลียร์เซฟเมื่อเล่นจบ
                 this.input.once('pointerdown', () => { 
                     this.registry.set('totalScore', 0);
                     this.scene.start('MainMenu'); 
