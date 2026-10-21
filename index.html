@@ -266,20 +266,17 @@ class BaseLevel extends Phaser.Scene {
     }
 
     setupEnemyAI(enemy) {
-        // กำหนดมุมเริ่มต้นแบบสุ่ม
-        enemy.setData('targetAngle', Phaser.Math.FloatBetween(-Math.PI, Math.PI));
-        
-        // Timer ให้ศัตรูเปลี่ยนทิศทางทุกๆ 1.5 - 3 วินาที
+        // ให้ศัตรูเริ่มเดินสุ่มทิศทางทันที (เดินอิสระ ไม่พุ่งเป้าไปที่ผู้เล่นตลอดเวลา)
+        let angle = Phaser.Math.FloatBetween(-Math.PI, Math.PI);
+        this.physics.velocityFromRotation(angle, this.enemySpeed, enemy.body.velocity);
+
+        // Timer ให้ศัตรูเปลี่ยนทิศทางสุ่มทุกๆ 2 - 4 วินาที เผื่อเวลาติดมุม
         let moveTimer = this.time.addEvent({
-            delay: Phaser.Math.Between(1500, 3000),
+            delay: Phaser.Math.Between(2000, 4000),
             callback: () => {
-                if (enemy && enemy.active && this.player && this.player.active) {
-                    // สุ่ม 40% หันหาผู้เล่นเพื่อจะยิง, 60% เดินลาดตระเวนสุ่มทิศทาง
-                    if (Phaser.Math.Between(1, 100) <= 40) {
-                        enemy.setData('targetAngle', Phaser.Math.Angle.Between(enemy.x, enemy.y, this.player.x, this.player.y));
-                    } else {
-                        enemy.setData('targetAngle', Phaser.Math.FloatBetween(-Math.PI, Math.PI));
-                    }
+                if (enemy && enemy.active) {
+                    let newAngle = Phaser.Math.FloatBetween(-Math.PI, Math.PI);
+                    this.physics.velocityFromRotation(newAngle, this.enemySpeed, enemy.body.velocity);
                 }
             },
             loop: true
@@ -303,12 +300,14 @@ class BaseLevel extends Phaser.Scene {
                 else if (char === 'P') this.player.setPosition(x, y);
                 else if (char === 'E') {
                     let enemy = this.enemies.create(x, y, 'tank_enemy');
-                    enemy.setCollideWorldBounds(true); enemy.setBounce(0.8);
+                    enemy.setCollideWorldBounds(true); 
+                    enemy.setBounce(1); // เพิ่มค่า Bounce เป็น 1 เพื่อให้เด้งกำแพงได้อย่างอิสระ 100%
                     this.setupEnemyAI(enemy);
                 }
                 else if (char === 'B') {
                     let boss = this.enemies.create(x, y, 'tank_boss');
-                    boss.setCollideWorldBounds(true); boss.setBounce(0.8);
+                    boss.setCollideWorldBounds(true); 
+                    boss.setBounce(1); // เด้งกำแพง 100%
                     boss.setData('isBoss', true); boss.setData('hp', 15);
                     this.setupEnemyAI(boss);
                 }
@@ -349,12 +348,12 @@ class BaseLevel extends Phaser.Scene {
             this.shoot(this.input.activePointer);
         }
 
-        // ศัตรูหันหน้าและเดินตามเป้าหมาย (targetAngle) ที่ AI ลาดตระเวนกำหนดไว้
+        // ศัตรูหันหน้าตามทิศทางที่กำลังวิ่ง (ให้เข้ากับระบบกระเด้งกำแพง)
         this.enemies.children.iterate((enemy) => {
             if(enemy && enemy.active) {
-                let targetAngle = enemy.getData('targetAngle');
-                enemy.rotation = Phaser.Math.Angle.RotateTo(enemy.rotation, targetAngle, 0.04); // ค่อยๆ หัน
-                this.physics.velocityFromRotation(enemy.rotation, this.enemySpeed, enemy.body.velocity); // เดินไปด้านหน้า
+                if (enemy.body.velocity.lengthSq() > 0) {
+                    enemy.rotation = Math.atan2(enemy.body.velocity.y, enemy.body.velocity.x);
+                }
             }
         });
     }
@@ -401,8 +400,8 @@ class BaseLevel extends Phaser.Scene {
             bullet.y += Math.sin(angle) * 35;
             this.physics.velocityFromRotation(angle, 700, bullet.body.velocity);
 
-            // ป้องกันกระสุนค้างในระบบ (ทำลายกระสุนทิ้งหากลอยออกไปนานเกิน 1.5 วินาที)
-            this.time.delayedCall(1500, () => {
+            // ป้องกันกระสุนค้างในระบบ 2 วินาทีตามที่ต้องการ
+            this.time.delayedCall(2000, () => {
                 if (bullet && bullet.active) bullet.disableBody(true, true);
             });
         }
@@ -414,29 +413,30 @@ class BaseLevel extends Phaser.Scene {
             if (enemy.active) {
                 let distance = Phaser.Math.Distance.Between(enemy.x, enemy.y, this.player.x, this.player.y);
                 if(distance < 500) { 
+                    // เมื่อพร้อมยิง ให้หันหน้าไปหาผู้เล่นทันที
                     let angleToPlayer = Phaser.Math.Angle.Between(enemy.x, enemy.y, this.player.x, this.player.y);
-                    let enemyRotation = enemy.rotation;
-                    let diffAngle = Phaser.Math.Angle.Wrap(angleToPlayer - enemyRotation);
+                    
+                    let bullet = this.enemyBullets.get(enemy.x, enemy.y, 'enemy_bullet');
+                    if (bullet) {
+                        try { this.sound.play('shoot', { volume: 0.1 }); } catch(e){}
+                        bullet.setActive(true).setVisible(true); 
+                        bullet.enableBody(true, enemy.x, enemy.y, true, true);
+                        
+                        // หันปืนไปทางเป้าหมายแล้วยิง
+                        enemy.setRotation(angleToPlayer); 
+                        bullet.setRotation(angleToPlayer); 
+                        bullet.x += Math.cos(angleToPlayer) * 35; 
+                        bullet.y += Math.sin(angleToPlayer) * 35;
+                        this.physics.velocityFromRotation(angleToPlayer, 400, bullet.body.velocity);
 
-                    // ยิงเฉพาะเมื่อหันปากกระบอกปืนตรงกับผู้เล่น (มุมห่างไม่เกิน ~11 องศา)
-                    if (Math.abs(diffAngle) < 0.2) {
-                        let bullet = this.enemyBullets.get(enemy.x, enemy.y, 'enemy_bullet');
-                        if (bullet) {
-                            try { this.sound.play('shoot', { volume: 0.1 }); } catch(e){}
-                            bullet.setActive(true).setVisible(true); 
-                            bullet.enableBody(true, enemy.x, enemy.y, true, true);
-                            
-                            // ยิงกระสุนพุ่งออกไปตามมุมด้านหน้าของศัตรูเท่านั้น
-                            bullet.setRotation(enemyRotation); 
-                            bullet.x += Math.cos(enemyRotation) * 35; 
-                            bullet.y += Math.sin(enemyRotation) * 35;
-                            this.physics.velocityFromRotation(enemyRotation, 400, bullet.body.velocity);
+                        // ทำลายกระสุนหลังจาก 2 วินาที
+                        this.time.delayedCall(2000, () => {
+                            if (bullet && bullet.active) bullet.disableBody(true, true);
+                        });
 
-                            // ป้องกันกระสุนค้างในระบบ
-                            this.time.delayedCall(2000, () => {
-                                if (bullet && bullet.active) bullet.disableBody(true, true);
-                            });
-                        }
+                        // ยิงเสร็จ ให้สุ่มทิศทางวิ่งหนีหรือไปทางอื่นทันที เพื่อไม่ให้มันยืนกระจุกตัว
+                        let runAngle = Phaser.Math.FloatBetween(-Math.PI, Math.PI);
+                        this.physics.velocityFromRotation(runAngle, this.enemySpeed, enemy.body.velocity);
                     }
                 }
             }
