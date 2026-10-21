@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>รถถังโชกุน - Ultra Graphics Edition</title>
+    <title>รถถังโชกุน - Super Power Edition</title>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.60.0/phaser.min.js"></script>
     <style>
@@ -27,7 +27,7 @@ const LEVELS = [
 
 const DEFAULT_MAP = [
     'WWWWWWWWWWWWWWWW',
-    'W..H....O......W',
+    'W.......O......W',
     'W..WWW....WWW..W',
     'W......O.......W',
     'W..............W',
@@ -35,7 +35,7 @@ const DEFAULT_MAP = [
     'W..............W',
     'W......O.......W',
     'W..WWW....WWW..W',
-    'W......O....H..W',
+    'W......O.......W',
     'W..............W',
     'WWWWWWWWWWWWWWWW'
 ];
@@ -55,7 +55,7 @@ class BootScene extends Phaser.Scene {
         
         let g = this.add.graphics();
         
-        // รถถังผู้เล่น (กว้าง 70, สูง 44)
+        // รถถังผู้เล่น
         g.clear();
         g.fillStyle(0x000000, 0.4); g.fillRoundedRect(8, 5, 48, 40, 5);
         g.fillStyle(0x1a1a1a); g.fillRoundedRect(5, 2, 40, 12, 3); g.fillRoundedRect(5, 26, 40, 12, 3);
@@ -84,7 +84,7 @@ class BootScene extends Phaser.Scene {
         g.fillStyle(0x222222); g.fillRoundedRect(56, 14, 10, 12, 2);
         g.generateTexture('tank_enemy', 70, 44);
 
-        // รถถังบอส (กว้าง 95, สูง 60)
+        // รถถังบอส
         g.clear();
         g.fillStyle(0x000000, 0.5); g.fillRoundedRect(10, 5, 75, 50, 6);
         g.fillStyle(0x1a1a1a); g.fillRoundedRect(5, 2, 60, 16, 4); g.fillRoundedRect(5, 42, 60, 16, 4);
@@ -98,15 +98,28 @@ class BootScene extends Phaser.Scene {
         g.fillStyle(0x111111); g.fillRoundedRect(80, 21, 14, 18, 3);
         g.generateTexture('tank_boss', 95, 60);
         
-        // สิ่งกีดขวาง (วาดที่ขนาด 50x50 พอดีเป๊ะ)
+        // สิ่งกีดขวาง
         g.clear(); g.fillStyle(0x000000, 0.4); g.fillRect(2, 2, 48, 48); g.fillStyle(0x4a4a4a); g.fillRect(0, 0, 50, 50); g.fillStyle(0x555555); g.fillRect(2, 2, 46, 46); g.lineStyle(2, 0x222222); g.strokeRect(0, 0, 50, 50); g.generateTexture('wall_normal', 50, 50);
         g.clear(); g.fillStyle(0x000000, 0.4); g.fillCircle(27, 27, 22); g.fillStyle(0x1a4314); g.fillCircle(25, 25, 22); g.fillStyle(0x255c1d); g.fillCircle(23, 23, 16); g.generateTexture('tree', 50, 50);
         g.clear(); g.fillStyle(0x000000, 0.4); g.fillRoundedRect(17, 7, 20, 40, 10); g.fillStyle(0x28681e); g.fillRoundedRect(15, 5, 20, 40, 10); g.generateTexture('cactus', 50, 50);
         g.clear(); g.fillStyle(0x000000, 0.4); g.fillCircle(27, 37, 15); g.fillStyle(0xeeeeee); g.fillCircle(25, 35, 15); g.fillCircle(25, 15, 10); g.generateTexture('snowman', 50, 50);
         
+        // ไอเทมและเอฟเฟกต์
         g.clear(); g.fillStyle(0xdddddd); g.fillRoundedRect(0, 0, 26, 26, 4); g.fillStyle(0xffffff); g.fillRoundedRect(2, 2, 22, 22, 2); g.fillStyle(0xcc0000); g.fillRect(10, 4, 6, 18); g.fillRect(4, 10, 18, 6); g.generateTexture('medkit', 26, 26);
+        
+        // [ใหม่] กล่องพลังพิเศษ (Power-up)
+        g.clear(); 
+        g.fillStyle(0x00ffff); g.fillRoundedRect(0, 0, 30, 30, 6); 
+        g.fillStyle(0xffffff); g.fillTriangle(15, 5, 5, 20, 15, 17); g.fillTriangle(15, 17, 25, 12, 15, 25); // สายฟ้า
+        g.generateTexture('powerup', 30, 30);
+
+        // กระสุน
         g.clear(); g.fillStyle(0xffffcc); g.fillRoundedRect(0, 0, 16, 6, 3); g.fillStyle(0xffaa00); g.strokeRoundedRect(0, 0, 16, 6, 3); g.generateTexture('bullet', 16, 6);
         g.clear(); g.fillStyle(0xffcccc); g.fillRoundedRect(0, 0, 16, 6, 3); g.fillStyle(0xff3300); g.strokeRoundedRect(0, 0, 16, 6, 3); g.generateTexture('enemy_bullet', 16, 6);
+        
+        // [ใหม่] กระสุนสายฟ้า
+        g.clear(); g.fillStyle(0xccffff); g.fillRoundedRect(0, 0, 26, 10, 4); g.fillStyle(0x00ffff); g.strokeRoundedRect(0, 0, 26, 10, 4); g.generateTexture('super_bullet', 26, 10);
+
         g.clear(); g.fillStyle(0xffaa00); g.fillCircle(4, 4, 4); g.generateTexture('particle', 8, 8);
         g.clear(); g.fillStyle(0xff2222); g.fillCircle(10, 10, 6); g.fillCircle(20, 10, 6); g.fillTriangle(4, 12, 26, 12, 15, 25); g.generateTexture('heart', 30, 30);
 
@@ -205,6 +218,7 @@ class GameLevel extends Phaser.Scene {
     create() {
         this.isGameOver = false;
         this.enemiesKilled = 0;
+        this.isSuperMode = false; // สถานะพลังพิเศษ
         this.customKeys = JSON.parse(localStorage.getItem('tankKeys')) || { up: 87, down: 83, left: 65, right: 68, shoot: 32 };
 
         this.add.grid(400, 300, 800, 600, 50, 50, this.levelData.bgColor, 1, this.levelData.gridColor, 0.6);
@@ -212,16 +226,14 @@ class GameLevel extends Phaser.Scene {
         this.walls = this.physics.add.staticGroup();
         this.obstacles = this.physics.add.staticGroup();
         this.items = this.physics.add.staticGroup(); 
+        this.powerups = this.physics.add.group(); // กลุ่มไอเทมพลังพิเศษ
         this.enemies = this.physics.add.group();
+        this.emptySpaces = []; // เก็บช่องว่างสำหรับสุ่มของเกิด
         
-        // ----------------------------------------------------
-        // [แก้ปัญหาเดินติด] บังคับให้ Hitbox เป็นทรง "จัตุรัส" 
-        // ----------------------------------------------------
         this.player = this.physics.add.image(0, 0, 'tank_player');
         this.player.setCollideWorldBounds(true).setDepth(10);
-        // ภาพกว้าง 70 สูง 44 -> ตั้ง Hitbox เป็น 44x44 และปัดให้มาอยู่ตรงกลางโดย Offset X = 13 (70-44/2)
         this.player.body.setSize(44, 44).setOffset(13, 0); 
-        this.player.setScale(0.7); // ขนาดสุดท้ายจะเหลือ 30.8 x 30.8 เดินเข้าช่อง 50 สบายๆ!
+        this.player.setScale(0.7); 
         this.player.setAngle(-90); 
 
         this.buildMap();
@@ -242,25 +254,26 @@ class GameLevel extends Phaser.Scene {
 
         let blockers = [this.walls, this.obstacles];
         
-        // ----------------------------------------------------
-        // [แก้ปัญหาเดินทะลุ] เพิ่มระบบให้ทุกอย่างชนกันได้
-        // ----------------------------------------------------
-        this.physics.add.collider(this.player, blockers); // ผู้เล่น ชน กำแพง
-        this.physics.add.collider(this.enemies, blockers); // ศัตรู ชน กำแพง
-        this.physics.add.collider(this.enemies, this.enemies); // ศัตรู ชน ศัตรู
-        this.physics.add.collider(this.player, this.enemies); // ผู้เล่น ชน ศัตรู (ผลักกันได้)
+        this.physics.add.collider(this.player, blockers); 
+        this.physics.add.collider(this.enemies, blockers); 
+        this.physics.add.collider(this.enemies, this.enemies); 
+        this.physics.add.collider(this.player, this.enemies); 
         
         this.physics.add.collider(this.bullets, blockers, this.hitWall, null, this);
         this.physics.add.collider(this.enemyBullets, blockers, this.hitWall, null, this);
         this.physics.add.overlap(this.bullets, this.enemies, this.hitEnemy, null, this);
         this.physics.add.overlap(this.enemyBullets, this.player, this.hitPlayer, null, this);
         this.physics.add.overlap(this.player, this.items, this.collectItem, null, this);
+        this.physics.add.overlap(this.player, this.powerups, this.collectPowerUp, null, this);
 
         this.time.addEvent({ delay: 1200, callback: this.processEnemyAI, callbackScope: this, loop: true });
+        
+        // สุ่มเกิดไอเทมพลังพิเศษทุกๆ 12 วินาที
+        this.time.addEvent({ delay: 12000, callback: this.spawnPowerUp, callbackScope: this, loop: true });
     }
 
     buildMap() {
-        let emptySpaces = []; 
+        this.emptySpaces = []; 
 
         for (let row = 0; row < DEFAULT_MAP.length; row++) {
             for (let col = 0; col < DEFAULT_MAP[row].length; col++) {
@@ -270,25 +283,24 @@ class GameLevel extends Phaser.Scene {
                 if (char === 'W') {
                     this.walls.create(x, y, 'wall_normal').setSize(50, 50); 
                 } else if (char === 'O') {
-                    // ปรับกล่องชนต้นไม้/หินให้เล็กนิดนึง (40x40) เพื่อให้ขับเฉียดได้ง่ายขึ้น
                     this.obstacles.create(x, y, this.levelData.obsKey).setSize(40, 40);
                 } else if (char === 'H') {
                     this.items.create(x, y, 'medkit');
                 } else if (char === 'P') {
                     this.player.setPosition(x, y);
                 } else if (char === '.') {
-                    emptySpaces.push({x: x, y: y});
+                    this.emptySpaces.push({x: x, y: y});
                 }
             }
         }
 
-        Phaser.Utils.Array.Shuffle(emptySpaces);
+        Phaser.Utils.Array.Shuffle(this.emptySpaces);
 
         for(let i=0; i<this.levelData.enemies; i++) {
-            let spawnPt = emptySpaces[i % emptySpaces.length];
+            let spawnPt = this.emptySpaces[i % this.emptySpaces.length];
             let enemy = this.enemies.create(spawnPt.x, spawnPt.y, 'tank_enemy');
             enemy.setCollideWorldBounds(true).setBounce(0.8);
-            enemy.body.setSize(44, 44).setOffset(13, 0); // ทำจัตุรัสเหมือนผู้เล่น
+            enemy.body.setSize(44, 44).setOffset(13, 0); 
             enemy.setScale(0.7);
             enemy.setAngle(Phaser.Math.Between(0, 3) * 90);
             this.physics.velocityFromRotation(enemy.rotation, this.levelData.speed, enemy.body.velocity);
@@ -297,13 +309,52 @@ class GameLevel extends Phaser.Scene {
         if (this.levelData.boss) {
             let boss = this.enemies.create(425, 75, 'tank_boss'); 
             boss.setCollideWorldBounds(true).setBounce(0.8);
-            // ภาพบอสกว้าง 95 สูง 60 -> Hitbox จัตุรัสขนาด 60x60, Offset = (95-60)/2 = 17.5
             boss.body.setSize(60, 60).setOffset(17.5, 0); 
             boss.setScale(0.7);
             boss.setData('isBoss', true); boss.setData('hp', 15);
             boss.setAngle(Phaser.Math.Between(0, 3) * 90);
             this.physics.velocityFromRotation(boss.rotation, this.levelData.speed, boss.body.velocity);
         }
+    }
+
+    spawnPowerUp() {
+        if (this.isGameOver || this.emptySpaces.length === 0) return;
+        
+        let spawnPt = Phaser.Utils.Array.GetRandom(this.emptySpaces);
+        let powerup = this.powerups.create(spawnPt.x, spawnPt.y, 'powerup');
+        
+        // ทำให้กล่องกระพริบดึงดูดสายตา
+        this.tweens.add({ targets: powerup, scale: 1.2, yoyo: true, repeat: -1, duration: 400 });
+        
+        // ถ้าไม่เก็บใน 7 วินาที ไอเทมจะหายไป
+        this.time.delayedCall(7000, () => {
+            if (powerup && powerup.active) {
+                this.createExplosion(powerup.x, powerup.y, 0x00ffff, 1);
+                powerup.destroy();
+            }
+        });
+    }
+
+    collectPowerUp(player, powerup) {
+        powerup.destroy();
+        try { this.sound.play('pickup', { volume: 1 }); } catch(e){}
+        this.createExplosion(player.x, player.y, 0x00ffff, 2);
+        
+        // เข้าสู่โหมดซุปเปอร์
+        this.isSuperMode = true;
+        this.player.setTint(0x00ffff); // รถถังเรืองแสงสีฟ้า
+        
+        // แจ้งเตือนบนจอ
+        let alertText = this.add.text(400, 200, '⚡ SUPER CANNON ⚡', { fontFamily: 'Kanit', fontSize: '40px', fill: '#00ffff', stroke: '#000', strokeThickness: 6 }).setOrigin(0.5).setDepth(100);
+        this.tweens.add({ targets: alertText, y: 150, alpha: 0, duration: 1500, onComplete: () => alertText.destroy() });
+
+        // โหมดซุปเปอร์จะหมดเวลาใน 10 วินาที
+        this.time.delayedCall(10000, () => {
+            if(!this.isGameOver && this.player.active) {
+                this.isSuperMode = false;
+                this.player.clearTint();
+            }
+        });
     }
 
     update() {
@@ -334,15 +385,26 @@ class GameLevel extends Phaser.Scene {
 
     shoot() {
         if (this.isGameOver || !this.player.active) return;
-        let bullet = this.bullets.get(this.player.x, this.player.y, 'bullet');
+        
+        // ตรวจสอบว่าใช้กระสุนธรรมดา หรือ ซุปเปอร์กระสุน
+        let bulletKey = this.isSuperMode ? 'super_bullet' : 'bullet';
+        let bulletSpeed = this.isSuperMode ? 1000 : 700;
+        
+        let bullet = this.bullets.get(this.player.x, this.player.y, bulletKey);
         if (bullet) {
-            try { this.sound.play('shoot', { volume: 0.4 }); } catch(e){}
-            this.cameras.main.shake(80, 0.005); 
+            try { this.sound.play('shoot', { volume: this.isSuperMode ? 0.7 : 0.4 }); } catch(e){}
+            
+            // ถ้าเป็นซุปเปอร์ จอจะสั่นแรงเวลายิง
+            this.cameras.main.shake(100, this.isSuperMode ? 0.015 : 0.005); 
+            
             bullet.setActive(true).setVisible(true).enableBody(true, this.player.x, this.player.y, true, true);
+            bullet.setData('isSuper', this.isSuperMode); // แปะป้ายบอกว่าลูกนี้คือกระสุนพิเศษ
+
             let angle = this.player.rotation; 
             bullet.setRotation(angle); 
             bullet.x += Math.cos(angle) * 30; bullet.y += Math.sin(angle) * 30;
-            this.physics.velocityFromRotation(angle, 700, bullet.body.velocity);
+            this.physics.velocityFromRotation(angle, bulletSpeed, bullet.body.velocity);
+            
             this.time.delayedCall(1500, () => { if(bullet.active) bullet.disableBody(true, true); });
         }
     }
@@ -391,27 +453,37 @@ class GameLevel extends Phaser.Scene {
     }
 
     hitWall(bullet, wall) {
-        this.createExplosion(bullet.x, bullet.y, 0xaaaaaa, 0.8);
+        let isSuper = bullet.getData('isSuper');
+        this.createExplosion(bullet.x, bullet.y, isSuper ? 0x00ffff : 0xaaaaaa, isSuper ? 1.5 : 0.8);
         bullet.disableBody(true, true);
     }
 
     hitEnemy(bullet, enemy) {
+        let isSuper = bullet.getData('isSuper');
         bullet.disableBody(true, true);
+        
         let isBoss = enemy.getData('isBoss');
         if (isBoss) {
-            let hp = enemy.getData('hp') - 1;
+            // ถ้าเป็นกระสุนซุปเปอร์ ลดเลือดบอส 5 หน่วย! ถ้าธรรมดาลด 1 หน่วย
+            let dmg = isSuper ? 5 : 1;
+            let hp = enemy.getData('hp') - dmg;
             enemy.setData('hp', hp);
-            enemy.setTint(0xffffff); this.time.delayedCall(80, () => enemy.clearTint());
+            
+            enemy.setTint(isSuper ? 0x00ffff : 0xffffff); 
+            this.time.delayedCall(80, () => enemy.clearTint());
+            
             if (hp > 0) {
                 try { this.sound.play('explode', { volume: 0.3 }); } catch(e){}
-                this.createExplosion(bullet.x, bullet.y, 0xffdd00, 1.2);
+                this.cameras.main.shake(100, isSuper ? 0.02 : 0.005);
+                this.createExplosion(bullet.x, bullet.y, isSuper ? 0x00ffff : 0xffdd00, isSuper ? 2.5 : 1.2);
                 return; 
             }
         }
 
         try { this.sound.play('explode', { volume: 0.7 }); } catch(e){}
-        this.cameras.main.shake(150, isBoss ? 0.02 : 0.01); 
-        this.createExplosion(enemy.x, enemy.y, isBoss ? 0xcc00ff : 0xff5500, isBoss ? 4 : 2);
+        // เอฟเฟกต์กระจุยกระจายขั้นสุดยอดถ้าตายด้วยปืนใหญ่สายฟ้า
+        this.cameras.main.shake(150, (isBoss || isSuper) ? 0.03 : 0.01); 
+        this.createExplosion(enemy.x, enemy.y, isSuper ? 0x00ffff : (isBoss ? 0xcc00ff : 0xff5500), isSuper ? 5 : (isBoss ? 4 : 2));
         enemy.disableBody(true, true);
         
         this.enemiesKilled++;
@@ -431,7 +503,11 @@ class GameLevel extends Phaser.Scene {
         
         this.playerHP--;
         this.updateUI();
-        this.player.setTint(0xff0000); this.time.delayedCall(150, () => this.player.clearTint());
+        this.player.setTint(0xff0000); this.time.delayedCall(150, () => {
+            // คืนสีเดิม (ถ้าติดซุปเปอร์โหมดอยู่ให้เรืองแสงฟ้าต่อ ถ้าไม่ให้ล้างสีออก)
+            if (this.isSuperMode && this.player.active) this.player.setTint(0x00ffff);
+            else this.player.clearTint();
+        });
 
         if (this.playerHP <= 0) {
             this.createExplosion(player.x, player.y, 0x00ffaa, 3);
