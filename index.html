@@ -98,13 +98,13 @@ class BootScene extends Phaser.Scene {
         g.fillStyle(0x111111); g.fillRoundedRect(80, 21, 14, 18, 3);
         g.generateTexture('tank_boss', 95, 60);
         
-        // สิ่งกีดขวาง & ไอเทม
-        g.clear(); g.fillStyle(0x000000, 0.4); g.fillRect(2, 2, 50, 50); g.fillStyle(0x4a4a4a); g.fillRect(0, 0, 50, 50); g.fillStyle(0x555555); g.fillRect(2, 2, 46, 46); g.lineStyle(2, 0x222222); g.strokeRect(0, 0, 50, 50); g.generateTexture('wall_normal', 52, 52);
-        g.clear(); g.fillStyle(0x000000, 0.4); g.fillCircle(27, 27, 22); g.fillStyle(0x1a4314); g.fillCircle(25, 25, 22); g.fillStyle(0x255c1d); g.fillCircle(23, 23, 16); g.generateTexture('tree', 52, 52);
-        g.clear(); g.fillStyle(0x000000, 0.4); g.fillRoundedRect(17, 7, 20, 40, 10); g.fillStyle(0x28681e); g.fillRoundedRect(15, 5, 20, 40, 10); g.generateTexture('cactus', 52, 52);
-        g.clear(); g.fillStyle(0x000000, 0.4); g.fillCircle(27, 37, 15); g.fillStyle(0xeeeeee); g.fillCircle(25, 35, 15); g.fillCircle(25, 15, 10); g.generateTexture('snowman', 52, 52);
-        g.clear(); g.fillStyle(0xdddddd); g.fillRoundedRect(0, 0, 26, 26, 4); g.fillStyle(0xffffff); g.fillRoundedRect(2, 2, 22, 22, 2); g.fillStyle(0xcc0000); g.fillRect(10, 4, 6, 18); g.fillRect(4, 10, 18, 6); g.generateTexture('medkit', 26, 26);
+        // สิ่งกีดขวาง (วาดที่ขนาด 50x50 พอดีเป๊ะ)
+        g.clear(); g.fillStyle(0x000000, 0.4); g.fillRect(2, 2, 48, 48); g.fillStyle(0x4a4a4a); g.fillRect(0, 0, 50, 50); g.fillStyle(0x555555); g.fillRect(2, 2, 46, 46); g.lineStyle(2, 0x222222); g.strokeRect(0, 0, 50, 50); g.generateTexture('wall_normal', 50, 50);
+        g.clear(); g.fillStyle(0x000000, 0.4); g.fillCircle(27, 27, 22); g.fillStyle(0x1a4314); g.fillCircle(25, 25, 22); g.fillStyle(0x255c1d); g.fillCircle(23, 23, 16); g.generateTexture('tree', 50, 50);
+        g.clear(); g.fillStyle(0x000000, 0.4); g.fillRoundedRect(17, 7, 20, 40, 10); g.fillStyle(0x28681e); g.fillRoundedRect(15, 5, 20, 40, 10); g.generateTexture('cactus', 50, 50);
+        g.clear(); g.fillStyle(0x000000, 0.4); g.fillCircle(27, 37, 15); g.fillStyle(0xeeeeee); g.fillCircle(25, 35, 15); g.fillCircle(25, 15, 10); g.generateTexture('snowman', 50, 50);
         
+        g.clear(); g.fillStyle(0xdddddd); g.fillRoundedRect(0, 0, 26, 26, 4); g.fillStyle(0xffffff); g.fillRoundedRect(2, 2, 22, 22, 2); g.fillStyle(0xcc0000); g.fillRect(10, 4, 6, 18); g.fillRect(4, 10, 18, 6); g.generateTexture('medkit', 26, 26);
         g.clear(); g.fillStyle(0xffffcc); g.fillRoundedRect(0, 0, 16, 6, 3); g.fillStyle(0xffaa00); g.strokeRoundedRect(0, 0, 16, 6, 3); g.generateTexture('bullet', 16, 6);
         g.clear(); g.fillStyle(0xffcccc); g.fillRoundedRect(0, 0, 16, 6, 3); g.fillStyle(0xff3300); g.strokeRoundedRect(0, 0, 16, 6, 3); g.generateTexture('enemy_bullet', 16, 6);
         g.clear(); g.fillStyle(0xffaa00); g.fillCircle(4, 4, 4); g.generateTexture('particle', 8, 8);
@@ -214,8 +214,11 @@ class GameLevel extends Phaser.Scene {
         this.items = this.physics.add.staticGroup(); 
         this.enemies = this.physics.add.group();
         
+        // ผู้เล่น (ปรับขนาดสเกลลง 65% ให้ตัวเล็กลง วิ่งในช่อง 50x50 ได้สบายๆ)
         this.player = this.physics.add.image(0, 0, 'tank_player');
         this.player.setCollideWorldBounds(true).setDepth(10);
+        this.player.setScale(0.65); // สำคัญมาก! แก้บั๊กเดินติด
+        this.player.body.setSize(44, 44); // บังคับขนาดกล่องให้หลวมๆ 
         this.player.setAngle(-90); 
 
         this.buildMap();
@@ -248,37 +251,45 @@ class GameLevel extends Phaser.Scene {
     }
 
     buildMap() {
-        let emptySpaces = []; // เก็บตำแหน่งที่ว่าง
+        let emptySpaces = []; 
 
         for (let row = 0; row < DEFAULT_MAP.length; row++) {
             for (let col = 0; col < DEFAULT_MAP[row].length; col++) {
                 let char = DEFAULT_MAP[row][col];
                 let x = col * 50 + 25; let y = row * 50 + 25;
                 
-                if (char === 'W') this.walls.create(x, y, 'wall_normal');
-                // เอาการบีบ Hitbox ออก เพื่อแก้ปัญหากล่องการชนล่องหน
-                else if (char === 'O') this.obstacles.create(x, y, this.levelData.obsKey);
-                else if (char === 'H') this.items.create(x, y, 'medkit');
-                else if (char === 'P') this.player.setPosition(x, y);
-                else if (char === '.') emptySpaces.push({x: x, y: y}); // เก็บพิกัดว่าง
+                if (char === 'W') {
+                    this.walls.create(x, y, 'wall_normal').setSize(50, 50); // กำหนดขนาดกำแพงให้เป๊ะ
+                } else if (char === 'O') {
+                    // กำหนดขนาดสิ่งกีดขวางให้เล็กกว่าช่องนิดหน่อย (40x40) เพื่อให้ขับเบียดๆ ผ่านไปได้
+                    this.obstacles.create(x, y, this.levelData.obsKey).setSize(40, 40);
+                } else if (char === 'H') {
+                    this.items.create(x, y, 'medkit');
+                } else if (char === 'P') {
+                    this.player.setPosition(x, y);
+                } else if (char === '.') {
+                    emptySpaces.push({x: x, y: y});
+                }
             }
         }
 
-        // สุ่มตำแหน่งเพื่อไม่ให้เกิดซ้ำจุดเดิม
         Phaser.Utils.Array.Shuffle(emptySpaces);
 
-        // ให้ศัตรูเกิดเฉพาะในที่ว่าง
         for(let i=0; i<this.levelData.enemies; i++) {
             let spawnPt = emptySpaces[i % emptySpaces.length];
             let enemy = this.enemies.create(spawnPt.x, spawnPt.y, 'tank_enemy');
-            enemy.setCollideWorldBounds(true).setBounce(1);
+            enemy.setCollideWorldBounds(true).setBounce(0.8); // ลดแรงเด้งเพื่อป้องกันการทะลุกำแพง
+            enemy.setScale(0.65); // ย่อขนาดเหมือนผู้เล่น
+            enemy.body.setSize(44, 44);
             enemy.setAngle(Phaser.Math.Between(0, 3) * 90);
             this.physics.velocityFromRotation(enemy.rotation, this.levelData.speed, enemy.body.velocity);
         }
 
         if (this.levelData.boss) {
-            let boss = this.enemies.create(425, 75, 'tank_boss'); // กำหนดจุดเกิดบอสบนที่โล่ง
-            boss.setCollideWorldBounds(true).setBounce(1);
+            let boss = this.enemies.create(425, 75, 'tank_boss'); 
+            boss.setCollideWorldBounds(true).setBounce(0.8);
+            boss.setScale(0.7); // ย่อบอสให้พอดีฉาก
+            boss.body.setSize(60, 60);
             boss.setData('isBoss', true); boss.setData('hp', 15);
             boss.setAngle(Phaser.Math.Between(0, 3) * 90);
             this.physics.velocityFromRotation(boss.rotation, this.levelData.speed, boss.body.velocity);
@@ -320,7 +331,8 @@ class GameLevel extends Phaser.Scene {
             bullet.setActive(true).setVisible(true).enableBody(true, this.player.x, this.player.y, true, true);
             let angle = this.player.rotation; 
             bullet.setRotation(angle); 
-            bullet.x += Math.cos(angle) * 35; bullet.y += Math.sin(angle) * 35;
+            // ระยะปล่อยกระสุนถูกปรับให้ตรงกับสเกลตัวรถถัง
+            bullet.x += Math.cos(angle) * 30; bullet.y += Math.sin(angle) * 30;
             this.physics.velocityFromRotation(angle, 700, bullet.body.velocity);
             this.time.delayedCall(1500, () => { if(bullet.active) bullet.disableBody(true, true); });
         }
@@ -342,7 +354,7 @@ class GameLevel extends Phaser.Scene {
                         try { this.sound.play('shoot', { volume: 0.2 }); } catch(e){}
                         bullet.setActive(true).setVisible(true).enableBody(true, enemy.x, enemy.y, true, true);
                         bullet.setRotation(snapAngle); 
-                        bullet.x += Math.cos(snapAngle) * 35; bullet.y += Math.sin(snapAngle) * 35;
+                        bullet.x += Math.cos(snapAngle) * 30; bullet.y += Math.sin(snapAngle) * 30;
                         this.physics.velocityFromRotation(snapAngle, 400, bullet.body.velocity);
                         this.time.delayedCall(1500, () => { if(bullet.active) bullet.disableBody(true, true); });
                     }
