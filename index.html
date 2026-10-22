@@ -26,14 +26,14 @@ const LEVELS = [
     { name: 'รังบอสใหญ่', bgColor: 0x170b24, gridColor: 0x0c0614, obsKey: 'wall_normal', enemies: 6, speed: 150, boss: true }
 ];
 
-// ปรับแผนที่เป็น 16x9 บล็อก (กว้าง 800 x สูง 450)
+// ปรับแผนที่ 16x9 บล็อก และฝังกล่องชีวิต (ตัว H) ไว้ในแผนที่
 const DEFAULT_MAP = [
     'WWWWWWWWWWWWWWWW',
     'W.......O......W',
     'W..WWW....WWW..W',
-    'W..............W',
+    'W..H...........W',
     'W..O....P...O..W',
-    'W..............W',
+    'W...........H..W',
     'W..WWW....WWW..W',
     'W......O.......W',
     'WWWWWWWWWWWWWWWW'
@@ -224,7 +224,12 @@ class GameLevel extends Phaser.Scene {
 
         this.walls = this.physics.add.staticGroup();
         this.obstacles = this.physics.add.staticGroup();
+        
+        // กลุ่มสำหรับกล่องชีวิตแบบฝัง (คงที่)
         this.items = this.physics.add.staticGroup(); 
+        // กลุ่มสำหรับกล่องชีวิตแบบสุ่ม (เกิดและหายไปได้)
+        this.healthDrops = this.physics.add.group();
+        
         this.powerups = this.physics.add.group(); 
         this.enemies = this.physics.add.group();
         this.emptySpaces = []; 
@@ -266,10 +271,14 @@ class GameLevel extends Phaser.Scene {
         this.physics.add.overlap(this.bullets, this.enemies, this.hitEnemy, null, this);
         this.physics.add.overlap(this.enemyBullets, this.player, this.hitPlayer, null, this);
         this.physics.add.overlap(this.player, this.items, this.collectItem, null, this);
+        this.physics.add.overlap(this.player, this.healthDrops, this.collectItem, null, this);
         this.physics.add.overlap(this.player, this.powerups, this.collectPowerUp, null, this);
 
         this.time.addEvent({ delay: 1200, callback: this.processEnemyAI, callbackScope: this, loop: true });
         this.time.addEvent({ delay: 12000, callback: this.spawnPowerUp, callbackScope: this, loop: true });
+        
+        // สุ่มกล่องชีวิตทุกๆ 15 วินาที
+        this.time.addEvent({ delay: 15000, callback: this.spawnMedkit, callbackScope: this, loop: true });
         
         this.createVirtualControls();
     }
@@ -291,13 +300,11 @@ class GameLevel extends Phaser.Scene {
             btn.on('pointerout', release);
         };
 
-        // D-Pad ขยับขึ้นมาเพื่อให้พอดีกับ 16:9
         addBtn(120, 270, '▲', 'up');
         addBtn(120, 390, '▼', 'down');
         addBtn(50, 330, '◀', 'left');
         addBtn(190, 330, '▶', 'right');
 
-        // ปุ่มยิงขยับขึ้นมาเช่นกัน
         let shootBtn = this.add.circle(720, 330, 50, 0xcc0000, 0.6).setInteractive().setDepth(100);
         shootBtn.setStrokeStyle(4, 0xffffff, 0.8);
         this.add.text(720, 330, '🔥', { fontSize: '35px' }).setOrigin(0.5).setDepth(100);
@@ -363,6 +370,25 @@ class GameLevel extends Phaser.Scene {
             if (powerup && powerup.active) {
                 this.createExplosion(powerup.x, powerup.y, 0x00ffff, 1);
                 powerup.destroy();
+            }
+        });
+    }
+
+    spawnMedkit() {
+        // หากจบเกม ไม่มีที่ว่าง หรือผู้เล่นเลือดเต็มอยู่แล้ว จะไม่สุ่มเกิด
+        if (this.isGameOver || this.emptySpaces.length === 0 || this.playerHP >= 5) return;
+        
+        let spawnPt = Phaser.Utils.Array.GetRandom(this.emptySpaces);
+        let medkit = this.healthDrops.create(spawnPt.x, spawnPt.y, 'medkit');
+        
+        // ทำให้กล่องกะพริบเพื่อดึงดูดสายตา
+        this.tweens.add({ targets: medkit, scale: 1.2, yoyo: true, repeat: -1, duration: 500 });
+        
+        // กล่องชีวิตสุ่มจะหายไปใน 10 วินาที
+        this.time.delayedCall(10000, () => {
+            if (medkit && medkit.active) {
+                this.createExplosion(medkit.x, medkit.y, 0x00ff00, 1);
+                medkit.destroy();
             }
         });
     }
