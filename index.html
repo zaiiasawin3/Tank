@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>รถถังโชกุน - Super Power Edition</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>รถถังโชกุน - Super Power Edition (16:9)</title>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.60.0/phaser.min.js"></script>
     <style>
@@ -25,18 +26,16 @@ const LEVELS = [
     { name: 'รังบอสใหญ่', bgColor: 0x170b24, gridColor: 0x0c0614, obsKey: 'wall_normal', enemies: 6, speed: 150, boss: true }
 ];
 
+// ปรับแผนที่เป็น 16x9 บล็อก (กว้าง 800 x สูง 450)
 const DEFAULT_MAP = [
     'WWWWWWWWWWWWWWWW',
     'W.......O......W',
     'W..WWW....WWW..W',
-    'W......O.......W',
     'W..............W',
     'W..O....P...O..W',
     'W..............W',
-    'W......O.......W',
     'W..WWW....WWW..W',
     'W......O.......W',
-    'W..............W',
     'WWWWWWWWWWWWWWWW'
 ];
 
@@ -107,17 +106,15 @@ class BootScene extends Phaser.Scene {
         // ไอเทมและเอฟเฟกต์
         g.clear(); g.fillStyle(0xdddddd); g.fillRoundedRect(0, 0, 26, 26, 4); g.fillStyle(0xffffff); g.fillRoundedRect(2, 2, 22, 22, 2); g.fillStyle(0xcc0000); g.fillRect(10, 4, 6, 18); g.fillRect(4, 10, 18, 6); g.generateTexture('medkit', 26, 26);
         
-        // [ใหม่] กล่องพลังพิเศษ (Power-up)
+        // กล่องพลังพิเศษ (Power-up)
         g.clear(); 
         g.fillStyle(0x00ffff); g.fillRoundedRect(0, 0, 30, 30, 6); 
-        g.fillStyle(0xffffff); g.fillTriangle(15, 5, 5, 20, 15, 17); g.fillTriangle(15, 17, 25, 12, 15, 25); // สายฟ้า
+        g.fillStyle(0xffffff); g.fillTriangle(15, 5, 5, 20, 15, 17); g.fillTriangle(15, 17, 25, 12, 15, 25); 
         g.generateTexture('powerup', 30, 30);
 
         // กระสุน
         g.clear(); g.fillStyle(0xffffcc); g.fillRoundedRect(0, 0, 16, 6, 3); g.fillStyle(0xffaa00); g.strokeRoundedRect(0, 0, 16, 6, 3); g.generateTexture('bullet', 16, 6);
         g.clear(); g.fillStyle(0xffcccc); g.fillRoundedRect(0, 0, 16, 6, 3); g.fillStyle(0xff3300); g.strokeRoundedRect(0, 0, 16, 6, 3); g.generateTexture('enemy_bullet', 16, 6);
-        
-        // [ใหม่] กระสุนสายฟ้า
         g.clear(); g.fillStyle(0xccffff); g.fillRoundedRect(0, 0, 26, 10, 4); g.fillStyle(0x00ffff); g.strokeRoundedRect(0, 0, 26, 10, 4); g.generateTexture('super_bullet', 26, 10);
 
         g.clear(); g.fillStyle(0xffaa00); g.fillCircle(4, 4, 4); g.generateTexture('particle', 8, 8);
@@ -130,27 +127,27 @@ class BootScene extends Phaser.Scene {
 class MainMenu extends Phaser.Scene {
     constructor() { super('MainMenu'); }
     create() {
-        this.add.grid(400, 300, 800, 600, 50, 50, 0x111111, 1, 0x222222, 0.5);
-        this.add.text(400, 150, 'รถถังโชกุน', { fontFamily: 'Kanit', fontSize: '80px', fill: '#00ff66', stroke: '#003311', strokeThickness: 10, shadow: { offsetX: 3, offsetY: 3, color: '#000', blur: 10, fill: true } }).setOrigin(0.5);
+        this.add.grid(400, 225, 800, 450, 50, 50, 0x111111, 1, 0x222222, 0.5);
+        this.add.text(400, 80, 'รถถังโชกุน', { fontFamily: 'Kanit', fontSize: '60px', fill: '#00ff66', stroke: '#003311', strokeThickness: 10, shadow: { offsetX: 3, offsetY: 3, color: '#000', blur: 10, fill: true } }).setOrigin(0.5);
         
-        this.createButton(400, 300, '▶ เริ่มเกมใหม่', () => {
+        this.createButton(400, 180, '▶ เริ่มเกมใหม่', () => {
             this.registry.set('totalScore', 0);
             this.scene.start('GameLevel', { level: 1, hp: 3 });
         });
 
         if (localStorage.getItem('shogunTankSave')) {
-            this.createButton(400, 400, '💾 เล่นต่อจากด่านที่เซฟ', () => {
+            this.createButton(400, 260, '💾 เล่นต่อจากด่านที่เซฟ', () => {
                 let save = JSON.parse(localStorage.getItem('shogunTankSave'));
                 this.registry.set('totalScore', save.score);
                 this.scene.start('GameLevel', { level: save.level, hp: save.hp });
             });
         }
 
-        this.createButton(400, 500, '⚙️ ตั้งค่าปุ่มควบคุม', () => this.scene.start('SettingsMenu'));
+        this.createButton(400, 340, '⚙️ ตั้งค่าปุ่มควบคุม', () => this.scene.start('SettingsMenu'));
     }
 
     createButton(x, y, text, callback) {
-        let btn = this.add.text(x, y, text, { fontFamily: 'Kanit', fontSize: '30px', fill: '#fff', backgroundColor: '#1a1a1a', padding: { x: 25, y: 12 } }).setOrigin(0.5).setInteractive();
+        let btn = this.add.text(x, y, text, { fontFamily: 'Kanit', fontSize: '24px', fill: '#fff', backgroundColor: '#1a1a1a', padding: { x: 25, y: 10 } }).setOrigin(0.5).setInteractive();
         btn.setStroke('#444', 3);
         btn.on('pointerover', () => { btn.setStyle({ fill: '#00ff66', backgroundColor: '#2a2a2a' }); this.tweens.add({ targets: btn, scale: 1.1, duration: 100 }); });
         btn.on('pointerout', () => { btn.setStyle({ fill: '#fff', backgroundColor: '#1a1a1a' }); this.tweens.add({ targets: btn, scale: 1, duration: 100 }); });
@@ -163,16 +160,16 @@ class SettingsMenu extends Phaser.Scene {
     constructor() { super('SettingsMenu'); }
     create() {
         this.keys = JSON.parse(localStorage.getItem('tankKeys'));
-        this.add.grid(400, 300, 800, 600, 50, 50, 0x111111, 1, 0x222222, 0.5);
-        this.add.text(400, 80, 'ตั้งค่าปุ่มควบคุม', { fontFamily: 'Kanit', fontSize: '40px', fill: '#fff', stroke: '#000', strokeThickness: 5 }).setOrigin(0.5);
+        this.add.grid(400, 225, 800, 450, 50, 50, 0x111111, 1, 0x222222, 0.5);
+        this.add.text(400, 50, 'ตั้งค่าปุ่มควบคุม', { fontFamily: 'Kanit', fontSize: '32px', fill: '#fff', stroke: '#000', strokeThickness: 5 }).setOrigin(0.5);
 
-        this.createKeySet(180, 'เดินขึ้น', 'up');
-        this.createKeySet(260, 'เดินลง', 'down');
-        this.createKeySet(340, 'เดินซ้าย', 'left');
-        this.createKeySet(420, 'เดินขวา', 'right');
-        this.createKeySet(500, 'ยิงปืน', 'shoot');
+        this.createKeySet(110, 'เดินขึ้น', 'up');
+        this.createKeySet(170, 'เดินลง', 'down');
+        this.createKeySet(230, 'เดินซ้าย', 'left');
+        this.createKeySet(290, 'เดินขวา', 'right');
+        this.createKeySet(350, 'ยิงปืน', 'shoot');
 
-        let backBtn = this.add.text(400, 580, '✔ บันทึกและกลับ', { fontFamily: 'Kanit', fontSize: '26px', fill: '#00ff66', backgroundColor: '#222', padding: {x:20, y:10} }).setOrigin(0.5).setInteractive();
+        let backBtn = this.add.text(400, 410, '✔ บันทึกและกลับ', { fontFamily: 'Kanit', fontSize: '20px', fill: '#00ff66', backgroundColor: '#222', padding: {x:20, y:8} }).setOrigin(0.5).setInteractive();
         backBtn.on('pointerdown', () => {
             localStorage.setItem('tankKeys', JSON.stringify(this.keys));
             this.scene.start('MainMenu');
@@ -180,8 +177,8 @@ class SettingsMenu extends Phaser.Scene {
     }
 
     createKeySet(y, label, keyName) {
-        this.add.text(320, y, label, { fontFamily: 'Kanit', fontSize: '28px', fill: '#ccc' }).setOrigin(1, 0.5);
-        let btn = this.add.text(420, y, this.getKeyChar(this.keys[keyName]), { fontFamily: 'Kanit', fontSize: '26px', fill: '#fff', backgroundColor: '#333', padding: {x:25, y:8} }).setOrigin(0, 0.5).setInteractive();
+        this.add.text(320, y, label, { fontFamily: 'Kanit', fontSize: '22px', fill: '#ccc' }).setOrigin(1, 0.5);
+        let btn = this.add.text(420, y, this.getKeyChar(this.keys[keyName]), { fontFamily: 'Kanit', fontSize: '20px', fill: '#fff', backgroundColor: '#333', padding: {x:25, y:6} }).setOrigin(0, 0.5).setInteractive();
         btn.setStroke('#555', 2);
         
         btn.on('pointerdown', () => {
@@ -216,7 +213,6 @@ class GameLevel extends Phaser.Scene {
     }
 
     create() {
-        // [ใหม่] เพิ่มระบบรองรับการกดหน้าจอหลายจุดพร้อมกัน (Multi-touch)
         this.input.addPointer(2);
         
         this.isGameOver = false;
@@ -224,7 +220,7 @@ class GameLevel extends Phaser.Scene {
         this.isSuperMode = false; 
         this.customKeys = JSON.parse(localStorage.getItem('tankKeys')) || { up: 87, down: 83, left: 65, right: 68, shoot: 32 };
 
-        this.add.grid(400, 300, 800, 600, 50, 50, this.levelData.bgColor, 1, this.levelData.gridColor, 0.6);
+        this.add.grid(400, 225, 800, 450, 50, 50, this.levelData.bgColor, 1, this.levelData.gridColor, 0.6);
 
         this.walls = this.physics.add.staticGroup();
         this.obstacles = this.physics.add.staticGroup();
@@ -241,11 +237,11 @@ class GameLevel extends Phaser.Scene {
 
         this.buildMap();
 
-        this.uiText = this.add.text(20, 15, '', { fontFamily: 'Kanit', fontSize: '24px', fill: '#fff', stroke: '#000', strokeThickness: 6, shadow: { offsetX: 2, offsetY: 2, color: '#000', fill: true } }).setDepth(20);
+        this.uiText = this.add.text(20, 15, '', { fontFamily: 'Kanit', fontSize: '20px', fill: '#fff', stroke: '#000', strokeThickness: 4, shadow: { offsetX: 2, offsetY: 2, color: '#000', fill: true } }).setDepth(20);
         this.heartIcons = [];
         this.updateUI();
 
-        let saveBtn = this.add.text(780, 15, '💾 บันทึกเกม', { fontFamily: 'Kanit', fontSize: '20px', fill: '#fff', backgroundColor: '#005500', padding: {x: 12, y: 8}, stroke: '#000', strokeThickness: 3 }).setOrigin(1, 0).setInteractive().setDepth(20);
+        let saveBtn = this.add.text(780, 15, '💾 บันทึกเกม', { fontFamily: 'Kanit', fontSize: '18px', fill: '#fff', backgroundColor: '#005500', padding: {x: 10, y: 6}, stroke: '#000', strokeThickness: 3 }).setOrigin(1, 0).setInteractive().setDepth(20);
         saveBtn.on('pointerdown', () => this.saveGame());
 
         this.bullets = this.physics.add.group({ classType: Phaser.Physics.Arcade.Image, maxSize: 30, runChildUpdate: true });
@@ -254,7 +250,6 @@ class GameLevel extends Phaser.Scene {
         this.input.keyboard.on(`keydown-${this.customKeys.shoot}`, () => this.shoot());
         this.input.keyboard.on('keydown-SPACE', () => this.shoot()); 
         
-        // [ปรับปรุง] ป้องกันไม่ให้กดยิงตอนแตะปุ่มควบคุมบนหน้าจอ
         this.input.on('pointerdown', (pointer, targets) => {
             if(targets.length === 0) this.shoot();
         });
@@ -276,7 +271,6 @@ class GameLevel extends Phaser.Scene {
         this.time.addEvent({ delay: 1200, callback: this.processEnemyAI, callbackScope: this, loop: true });
         this.time.addEvent({ delay: 12000, callback: this.spawnPowerUp, callbackScope: this, loop: true });
         
-        // [ใหม่] สร้างปุ่มบังคับบนหน้าจอ
         this.createVirtualControls();
     }
 
@@ -297,16 +291,16 @@ class GameLevel extends Phaser.Scene {
             btn.on('pointerout', release);
         };
 
-        // D-Pad
-        addBtn(120, 430, '▲', 'up');
-        addBtn(120, 550, '▼', 'down');
-        addBtn(50, 490, '◀', 'left');
-        addBtn(190, 490, '▶', 'right');
+        // D-Pad ขยับขึ้นมาเพื่อให้พอดีกับ 16:9
+        addBtn(120, 270, '▲', 'up');
+        addBtn(120, 390, '▼', 'down');
+        addBtn(50, 330, '◀', 'left');
+        addBtn(190, 330, '▶', 'right');
 
-        // ปุ่มยิง
-        let shootBtn = this.add.circle(720, 490, 50, 0xcc0000, 0.6).setInteractive().setDepth(100);
+        // ปุ่มยิงขยับขึ้นมาเช่นกัน
+        let shootBtn = this.add.circle(720, 330, 50, 0xcc0000, 0.6).setInteractive().setDepth(100);
         shootBtn.setStrokeStyle(4, 0xffffff, 0.8);
-        this.add.text(720, 490, '🔥', { fontSize: '35px' }).setOrigin(0.5).setDepth(100);
+        this.add.text(720, 330, '🔥', { fontSize: '35px' }).setOrigin(0.5).setDepth(100);
         
         shootBtn.on('pointerdown', () => { 
             this.shoot(); 
@@ -362,12 +356,9 @@ class GameLevel extends Phaser.Scene {
 
     spawnPowerUp() {
         if (this.isGameOver || this.emptySpaces.length === 0) return;
-        
         let spawnPt = Phaser.Utils.Array.GetRandom(this.emptySpaces);
         let powerup = this.powerups.create(spawnPt.x, spawnPt.y, 'powerup');
-        
         this.tweens.add({ targets: powerup, scale: 1.2, yoyo: true, repeat: -1, duration: 400 });
-        
         this.time.delayedCall(7000, () => {
             if (powerup && powerup.active) {
                 this.createExplosion(powerup.x, powerup.y, 0x00ffff, 1);
@@ -380,12 +371,11 @@ class GameLevel extends Phaser.Scene {
         powerup.destroy();
         try { this.sound.play('pickup', { volume: 1 }); } catch(e){}
         this.createExplosion(player.x, player.y, 0x00ffff, 2);
-        
         this.isSuperMode = true;
         this.player.setTint(0x00ffff);
         
-        let alertText = this.add.text(400, 200, '⚡ SUPER CANNON ⚡', { fontFamily: 'Kanit', fontSize: '40px', fill: '#00ffff', stroke: '#000', strokeThickness: 6 }).setOrigin(0.5).setDepth(100);
-        this.tweens.add({ targets: alertText, y: 150, alpha: 0, duration: 1500, onComplete: () => alertText.destroy() });
+        let alertText = this.add.text(400, 150, '⚡ SUPER CANNON ⚡', { fontFamily: 'Kanit', fontSize: '32px', fill: '#00ffff', stroke: '#000', strokeThickness: 6 }).setOrigin(0.5).setDepth(100);
+        this.tweens.add({ targets: alertText, y: 100, alpha: 0, duration: 1500, onComplete: () => alertText.destroy() });
 
         this.time.delayedCall(10000, () => {
             if(!this.isGameOver && this.player.active) {
@@ -400,7 +390,6 @@ class GameLevel extends Phaser.Scene {
         this.player.setVelocity(0);
         let k = this.customKeys;
         
-        // [ปรับปรุง] รับค่าการกดปุ่มบนจอรวมกับคีย์บอร์ด
         let isUp = this.input.keyboard.addKey(k.up).isDown || this.input.keyboard.addKey(38).isDown || this.mobileControls.up;
         let isDown = this.input.keyboard.addKey(k.down).isDown || this.input.keyboard.addKey(40).isDown || this.mobileControls.down;
         let isLeft = this.input.keyboard.addKey(k.left).isDown || this.input.keyboard.addKey(37).isDown || this.mobileControls.left;
@@ -419,7 +408,7 @@ class GameLevel extends Phaser.Scene {
         this.heartIcons = [];
         let startX = this.uiText.x + this.uiText.width + 5;
         for(let i=0; i<this.playerHP; i++) {
-            this.heartIcons.push(this.add.image(startX + (i * 28), 30, 'heart').setDepth(20));
+            this.heartIcons.push(this.add.image(startX + (i * 24), 25, 'heart').setScale(0.8).setDepth(20));
         }
     }
 
@@ -568,23 +557,23 @@ class GameLevel extends Phaser.Scene {
     showOverlay(isWin) {
         this.isGameOver = true;
         this.physics.pause();
-        let bg = this.add.rectangle(400, 300, 800, 600, 0x000000, 0.8).setDepth(100);
+        let bg = this.add.rectangle(400, 225, 800, 450, 0x000000, 0.8).setDepth(100);
         
         if (isWin) {
             if (this.levelNum < 10) {
-                this.add.text(400, 230, '✨ STAGE CLEAR ✨', { fontFamily: 'Kanit', fontSize: '60px', fill: '#00ff66', stroke: '#000', strokeThickness: 8, shadow: { offsetX: 0, offsetY: 0, color: '#0f0', blur: 20, fill: true } }).setOrigin(0.5).setDepth(101);
-                let nextBtn = this.add.text(400, 350, 'ลุยด่านถัดไป ➔', { fontFamily: 'Kanit', fontSize: '32px', fill: '#fff', backgroundColor: '#0066cc', padding: {x: 30, y: 12}, stroke: '#000', strokeThickness: 4 }).setOrigin(0.5).setInteractive().setDepth(101);
+                this.add.text(400, 170, '✨ STAGE CLEAR ✨', { fontFamily: 'Kanit', fontSize: '50px', fill: '#00ff66', stroke: '#000', strokeThickness: 8, shadow: { offsetX: 0, offsetY: 0, color: '#0f0', blur: 20, fill: true } }).setOrigin(0.5).setDepth(101);
+                let nextBtn = this.add.text(400, 270, 'ลุยด่านถัดไป ➔', { fontFamily: 'Kanit', fontSize: '28px', fill: '#fff', backgroundColor: '#0066cc', padding: {x: 30, y: 10}, stroke: '#000', strokeThickness: 4 }).setOrigin(0.5).setInteractive().setDepth(101);
                 nextBtn.on('pointerdown', () => this.scene.restart({ level: this.levelNum + 1, hp: this.playerHP }));
             } else {
-                this.add.text(400, 230, '🏆 แชมเปี้ยนโชกุน! 🏆\nคุณเคลียร์เกมสำเร็จ', { fontFamily: 'Kanit', fontSize: '55px', fill: '#ffcc00', align: 'center', stroke: '#000', strokeThickness: 8, shadow: { offsetX: 0, offsetY: 0, color: '#ff0', blur: 20, fill: true } }).setOrigin(0.5).setDepth(101);
-                let menuBtn = this.add.text(400, 380, 'กลับเมนูหลัก', { fontFamily: 'Kanit', fontSize: '30px', fill: '#fff', backgroundColor: '#444', padding: {x: 30, y: 12} }).setOrigin(0.5).setInteractive().setDepth(101);
+                this.add.text(400, 150, '🏆 แชมเปี้ยนโชกุน! 🏆\nคุณเคลียร์เกมสำเร็จ', { fontFamily: 'Kanit', fontSize: '45px', fill: '#ffcc00', align: 'center', stroke: '#000', strokeThickness: 8, shadow: { offsetX: 0, offsetY: 0, color: '#ff0', blur: 20, fill: true } }).setOrigin(0.5).setDepth(101);
+                let menuBtn = this.add.text(400, 280, 'กลับเมนูหลัก', { fontFamily: 'Kanit', fontSize: '26px', fill: '#fff', backgroundColor: '#444', padding: {x: 30, y: 10} }).setOrigin(0.5).setInteractive().setDepth(101);
                 menuBtn.on('pointerdown', () => this.scene.start('MainMenu'));
             }
         } else {
-            this.add.text(400, 230, '🔥 MISSION FAILED 🔥', { fontFamily: 'Kanit', fontSize: '60px', fill: '#ff3300', stroke: '#000', strokeThickness: 8, shadow: { offsetX: 0, offsetY: 0, color: '#f00', blur: 20, fill: true } }).setOrigin(0.5).setDepth(101);
-            let retryBtn = this.add.text(400, 350, 'ลองใหม่อีกครั้ง ↻', { fontFamily: 'Kanit', fontSize: '32px', fill: '#fff', backgroundColor: '#990000', padding: {x: 30, y: 12}, stroke: '#000', strokeThickness: 4 }).setOrigin(0.5).setInteractive().setDepth(101);
+            this.add.text(400, 170, '🔥 MISSION FAILED 🔥', { fontFamily: 'Kanit', fontSize: '50px', fill: '#ff3300', stroke: '#000', strokeThickness: 8, shadow: { offsetX: 0, offsetY: 0, color: '#f00', blur: 20, fill: true } }).setOrigin(0.5).setDepth(101);
+            let retryBtn = this.add.text(400, 270, 'ลองใหม่อีกครั้ง ↻', { fontFamily: 'Kanit', fontSize: '28px', fill: '#fff', backgroundColor: '#990000', padding: {x: 30, y: 10}, stroke: '#000', strokeThickness: 4 }).setOrigin(0.5).setInteractive().setDepth(101);
             retryBtn.on('pointerdown', () => this.scene.restart({ level: this.levelNum, hp: 3 }));
-            let menuBtn = this.add.text(400, 430, 'กลับเมนูหลัก', { fontFamily: 'Kanit', fontSize: '26px', fill: '#aaa' }).setOrigin(0.5).setInteractive().setDepth(101);
+            let menuBtn = this.add.text(400, 340, 'กลับเมนูหลัก', { fontFamily: 'Kanit', fontSize: '22px', fill: '#aaa' }).setOrigin(0.5).setInteractive().setDepth(101);
             menuBtn.on('pointerdown', () => this.scene.start('MainMenu'));
         }
     }
@@ -592,7 +581,7 @@ class GameLevel extends Phaser.Scene {
 
 const config = {
     type: Phaser.AUTO,
-    scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH, width: 800, height: 600 },
+    scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH, width: 800, height: 450 },
     physics: { default: 'arcade', arcade: { debug: false } },
     scene: [BootScene, MainMenu, SettingsMenu, GameLevel]
 };
