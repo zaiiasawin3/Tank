@@ -216,9 +216,12 @@ class GameLevel extends Phaser.Scene {
     }
 
     create() {
+        // [ใหม่] เพิ่มระบบรองรับการกดหน้าจอหลายจุดพร้อมกัน (Multi-touch)
+        this.input.addPointer(2);
+        
         this.isGameOver = false;
         this.enemiesKilled = 0;
-        this.isSuperMode = false; // สถานะพลังพิเศษ
+        this.isSuperMode = false; 
         this.customKeys = JSON.parse(localStorage.getItem('tankKeys')) || { up: 87, down: 83, left: 65, right: 68, shoot: 32 };
 
         this.add.grid(400, 300, 800, 600, 50, 50, this.levelData.bgColor, 1, this.levelData.gridColor, 0.6);
@@ -226,9 +229,9 @@ class GameLevel extends Phaser.Scene {
         this.walls = this.physics.add.staticGroup();
         this.obstacles = this.physics.add.staticGroup();
         this.items = this.physics.add.staticGroup(); 
-        this.powerups = this.physics.add.group(); // กลุ่มไอเทมพลังพิเศษ
+        this.powerups = this.physics.add.group(); 
         this.enemies = this.physics.add.group();
-        this.emptySpaces = []; // เก็บช่องว่างสำหรับสุ่มของเกิด
+        this.emptySpaces = []; 
         
         this.player = this.physics.add.image(0, 0, 'tank_player');
         this.player.setCollideWorldBounds(true).setDepth(10);
@@ -250,7 +253,11 @@ class GameLevel extends Phaser.Scene {
         
         this.input.keyboard.on(`keydown-${this.customKeys.shoot}`, () => this.shoot());
         this.input.keyboard.on('keydown-SPACE', () => this.shoot()); 
-        this.input.on('pointerdown', () => this.shoot());
+        
+        // [ปรับปรุง] ป้องกันไม่ให้กดยิงตอนแตะปุ่มควบคุมบนหน้าจอ
+        this.input.on('pointerdown', (pointer, targets) => {
+            if(targets.length === 0) this.shoot();
+        });
 
         let blockers = [this.walls, this.obstacles];
         
@@ -267,14 +274,50 @@ class GameLevel extends Phaser.Scene {
         this.physics.add.overlap(this.player, this.powerups, this.collectPowerUp, null, this);
 
         this.time.addEvent({ delay: 1200, callback: this.processEnemyAI, callbackScope: this, loop: true });
-        
-        // สุ่มเกิดไอเทมพลังพิเศษทุกๆ 12 วินาที
         this.time.addEvent({ delay: 12000, callback: this.spawnPowerUp, callbackScope: this, loop: true });
+        
+        // [ใหม่] สร้างปุ่มบังคับบนหน้าจอ
+        this.createVirtualControls();
+    }
+
+    createVirtualControls() {
+        this.mobileControls = { up: false, down: false, left: false, right: false };
+
+        const addBtn = (x, y, label, key) => {
+            let btn = this.add.circle(x, y, 35, 0x000000, 0.5).setInteractive().setDepth(100);
+            btn.setStrokeStyle(3, 0xffffff, 0.8);
+            this.add.text(x, y, label, { fontFamily: 'Kanit', fontSize: '28px', fill: '#fff' }).setOrigin(0.5).setDepth(100);
+            
+            const press = () => { this.mobileControls[key] = true; btn.setFillStyle(0x00ff66, 0.5); };
+            const release = () => { this.mobileControls[key] = false; btn.setFillStyle(0x000000, 0.5); };
+
+            btn.on('pointerdown', press);
+            btn.on('pointerover', (pointer) => { if (pointer.isDown) press(); });
+            btn.on('pointerup', release);
+            btn.on('pointerout', release);
+        };
+
+        // D-Pad
+        addBtn(120, 430, '▲', 'up');
+        addBtn(120, 550, '▼', 'down');
+        addBtn(50, 490, '◀', 'left');
+        addBtn(190, 490, '▶', 'right');
+
+        // ปุ่มยิง
+        let shootBtn = this.add.circle(720, 490, 50, 0xcc0000, 0.6).setInteractive().setDepth(100);
+        shootBtn.setStrokeStyle(4, 0xffffff, 0.8);
+        this.add.text(720, 490, '🔥', { fontSize: '35px' }).setOrigin(0.5).setDepth(100);
+        
+        shootBtn.on('pointerdown', () => { 
+            this.shoot(); 
+            shootBtn.setFillStyle(0xff3333, 0.8); 
+        });
+        shootBtn.on('pointerup', () => { shootBtn.setFillStyle(0xcc0000, 0.6); });
+        shootBtn.on('pointerout', () => { shootBtn.setFillStyle(0xcc0000, 0.6); });
     }
 
     buildMap() {
         this.emptySpaces = []; 
-
         for (let row = 0; row < DEFAULT_MAP.length; row++) {
             for (let col = 0; col < DEFAULT_MAP[row].length; col++) {
                 let char = DEFAULT_MAP[row][col];
@@ -323,10 +366,8 @@ class GameLevel extends Phaser.Scene {
         let spawnPt = Phaser.Utils.Array.GetRandom(this.emptySpaces);
         let powerup = this.powerups.create(spawnPt.x, spawnPt.y, 'powerup');
         
-        // ทำให้กล่องกระพริบดึงดูดสายตา
         this.tweens.add({ targets: powerup, scale: 1.2, yoyo: true, repeat: -1, duration: 400 });
         
-        // ถ้าไม่เก็บใน 7 วินาที ไอเทมจะหายไป
         this.time.delayedCall(7000, () => {
             if (powerup && powerup.active) {
                 this.createExplosion(powerup.x, powerup.y, 0x00ffff, 1);
@@ -340,15 +381,12 @@ class GameLevel extends Phaser.Scene {
         try { this.sound.play('pickup', { volume: 1 }); } catch(e){}
         this.createExplosion(player.x, player.y, 0x00ffff, 2);
         
-        // เข้าสู่โหมดซุปเปอร์
         this.isSuperMode = true;
-        this.player.setTint(0x00ffff); // รถถังเรืองแสงสีฟ้า
+        this.player.setTint(0x00ffff);
         
-        // แจ้งเตือนบนจอ
         let alertText = this.add.text(400, 200, '⚡ SUPER CANNON ⚡', { fontFamily: 'Kanit', fontSize: '40px', fill: '#00ffff', stroke: '#000', strokeThickness: 6 }).setOrigin(0.5).setDepth(100);
         this.tweens.add({ targets: alertText, y: 150, alpha: 0, duration: 1500, onComplete: () => alertText.destroy() });
 
-        // โหมดซุปเปอร์จะหมดเวลาใน 10 วินาที
         this.time.delayedCall(10000, () => {
             if(!this.isGameOver && this.player.active) {
                 this.isSuperMode = false;
@@ -361,10 +399,12 @@ class GameLevel extends Phaser.Scene {
         if (this.isGameOver || !this.player.active) return;
         this.player.setVelocity(0);
         let k = this.customKeys;
-        let isUp = this.input.keyboard.addKey(k.up).isDown || this.input.keyboard.addKey(38).isDown;
-        let isDown = this.input.keyboard.addKey(k.down).isDown || this.input.keyboard.addKey(40).isDown;
-        let isLeft = this.input.keyboard.addKey(k.left).isDown || this.input.keyboard.addKey(37).isDown;
-        let isRight = this.input.keyboard.addKey(k.right).isDown || this.input.keyboard.addKey(39).isDown;
+        
+        // [ปรับปรุง] รับค่าการกดปุ่มบนจอรวมกับคีย์บอร์ด
+        let isUp = this.input.keyboard.addKey(k.up).isDown || this.input.keyboard.addKey(38).isDown || this.mobileControls.up;
+        let isDown = this.input.keyboard.addKey(k.down).isDown || this.input.keyboard.addKey(40).isDown || this.mobileControls.down;
+        let isLeft = this.input.keyboard.addKey(k.left).isDown || this.input.keyboard.addKey(37).isDown || this.mobileControls.left;
+        let isRight = this.input.keyboard.addKey(k.right).isDown || this.input.keyboard.addKey(39).isDown || this.mobileControls.right;
 
         if (isUp) { this.player.setVelocityY(-200); this.player.setAngle(-90); }
         else if (isDown) { this.player.setVelocityY(200); this.player.setAngle(90); }
@@ -386,7 +426,6 @@ class GameLevel extends Phaser.Scene {
     shoot() {
         if (this.isGameOver || !this.player.active) return;
         
-        // ตรวจสอบว่าใช้กระสุนธรรมดา หรือ ซุปเปอร์กระสุน
         let bulletKey = this.isSuperMode ? 'super_bullet' : 'bullet';
         let bulletSpeed = this.isSuperMode ? 1000 : 700;
         
@@ -394,11 +433,10 @@ class GameLevel extends Phaser.Scene {
         if (bullet) {
             try { this.sound.play('shoot', { volume: this.isSuperMode ? 0.7 : 0.4 }); } catch(e){}
             
-            // ถ้าเป็นซุปเปอร์ จอจะสั่นแรงเวลายิง
             this.cameras.main.shake(100, this.isSuperMode ? 0.015 : 0.005); 
             
             bullet.setActive(true).setVisible(true).enableBody(true, this.player.x, this.player.y, true, true);
-            bullet.setData('isSuper', this.isSuperMode); // แปะป้ายบอกว่าลูกนี้คือกระสุนพิเศษ
+            bullet.setData('isSuper', this.isSuperMode); 
 
             let angle = this.player.rotation; 
             bullet.setRotation(angle); 
@@ -464,7 +502,6 @@ class GameLevel extends Phaser.Scene {
         
         let isBoss = enemy.getData('isBoss');
         if (isBoss) {
-            // ถ้าเป็นกระสุนซุปเปอร์ ลดเลือดบอส 5 หน่วย! ถ้าธรรมดาลด 1 หน่วย
             let dmg = isSuper ? 5 : 1;
             let hp = enemy.getData('hp') - dmg;
             enemy.setData('hp', hp);
@@ -481,7 +518,6 @@ class GameLevel extends Phaser.Scene {
         }
 
         try { this.sound.play('explode', { volume: 0.7 }); } catch(e){}
-        // เอฟเฟกต์กระจุยกระจายขั้นสุดยอดถ้าตายด้วยปืนใหญ่สายฟ้า
         this.cameras.main.shake(150, (isBoss || isSuper) ? 0.03 : 0.01); 
         this.createExplosion(enemy.x, enemy.y, isSuper ? 0x00ffff : (isBoss ? 0xcc00ff : 0xff5500), isSuper ? 5 : (isBoss ? 4 : 2));
         enemy.disableBody(true, true);
@@ -504,7 +540,6 @@ class GameLevel extends Phaser.Scene {
         this.playerHP--;
         this.updateUI();
         this.player.setTint(0xff0000); this.time.delayedCall(150, () => {
-            // คืนสีเดิม (ถ้าติดซุปเปอร์โหมดอยู่ให้เรืองแสงฟ้าต่อ ถ้าไม่ให้ล้างสีออก)
             if (this.isSuperMode && this.player.active) this.player.setTint(0x00ffff);
             else this.player.clearTint();
         });
